@@ -1,6 +1,9 @@
+using Microsoft.AspNetCore.Mvc;
+
 namespace VCAPI.Controllers
 {
-    public class DocumentController
+    [Route("api/[controller]")]
+    public class DocumentController : Controller
     {
         
     }

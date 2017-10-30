@@ -1,6 +1,9 @@
+using Microsoft.AspNetCore.Mvc;
+
 namespace VCAPI.Controllers
 {
-    public class ComponentTypeController
+    [Route("api/[controller]")]
+    public class ComponentTypeController : Controller
     {
         
     }

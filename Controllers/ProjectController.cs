@@ -1,6 +1,9 @@
+using Microsoft.AspNetCore.Mvc;
+
 namespace VCAPI.Controllers
 {
-    public class ProjectController
+    [Route("api/[controller]")]
+    public class ProjectController : Controller
     {
         
     }
