@@ -29,13 +29,13 @@ CREATE TABLE `user` (
 
 CREATE TABLE `role` (
     roleID      INT NOT NULL AUTO_INCREMENT,
-    rolename    VARCHAR(32) NOT NULL,
+    rolename    VARCHAR(32) NOT NULL UNIQUE,
     PRIMARY KEY (roleID)
 ); 
 
 CREATE TABLE `project`(
     projectID   INT NOT NULL AUTO_INCREMENT,
-    `name`      VARCHAR(64) NOT NULL,
+    `name`      VARCHAR(64) NOT NULL UNIQUE,
     PRIMARY KEY (projectID)
 );
 
@@ -50,38 +50,40 @@ CREATE TABLE `project_relationship` (
 
 CREATE TABLE `category`(
     categoryID  INT NOT NULL AUTO_INCREMENT,
-    `name`      VARCHAR(64) NOT NULL,
+    `name`      VARCHAR(64) NOT NULL UNIQUE,
     PRIMARY KEY (categoryID)
 );
 
 
 CREATE TABLE `componentType`(
     componentTypeID INT NOT NULL AUTO_INCREMENT,
-    `name`          VARCHAR(64) NOT NULL,
+    `name`          VARCHAR(64) NOT NULL UNIQUE,
+    parentProjectID INT NOT NULL,
     categoryID      INT NOT NULL,
     `storage`       INT NOT NULL,
     `description`   VARCHAR(512) NOT NULL,
     PRIMARY KEY (componentTypeID),
-    FOREIGN KEY (categoryID) REFERENCES `category`(categoryID)
+    FOREIGN KEY (categoryID) REFERENCES `category`(categoryID),
+    FOREIGN KEY (parentProjectID) REFERENCES `project`(projectID)
 );
 
 CREATE TABLE `component` (
     componentID         INT NOT NULL AUTO_INCREMENT,
-    componentTypeID     INT NOT NULL,
+    parentComponentTypeID INT NOT NULL,
     `status`            VARCHAR(64) NOT NULL,
     `comment`           VARCHAR(512) NOT NULL,
     PRIMARY KEY (componentID),
-    FOREIGN KEY (componentTypeID) REFERENCES `componentType`(componentTypeID)
+    FOREIGN KEY (parentComponentTypeID) REFERENCES `componentType`(componentTypeID)
 );
 
 CREATE TABLE `document`(
     documentID      INT NOT NULL AUTO_INCREMENT,
-    componentTypeID INT NOT NULL,
     filename        VARCHAR(64) NOT NULL,
+    parentComponentTypeID INT NOT NULL,
     bucketpath      VARCHAR(1024) NOT NULL,
     description     VARCHAR(512) NOT NULL,
     PRIMARY KEY (documentID),
-    FOREIGN KEY (componentTypeID) REFERENCES `componentType`(componentTypeID)
+    FOREIGN KEY (parentComponentTypeID) REFERENCES `componentType`(componentTypeID)
     
 );
 
@@ -89,9 +91,9 @@ CREATE TABLE `projectLog` (
     projectLogID    INT NOT NULL AUTO_INCREMENT,
     projectID       INT NOT NULL,
     userID          VARCHAR(32) NOT NULL,
-    `timestamp`     datetime NOT NULL,
+    `timestamp`     INT NOT NULL,
     `comment`       VARCHAR(512) NOT NULL,
-    `type`          VARCHAR(16) NOT NULL,
+    `type`          ENUM('created', 'deleted', 'updated'),
     PRIMARY KEY (projectLogID),
     FOREIGN KEY (projectID) REFERENCES `project`(projectID),
     FOREIGN KEY (userID) REFERENCES `user`(userID)
@@ -102,9 +104,9 @@ CREATE TABLE `componentTypeLog` (
     componentTypeID     INT NOT NULL,
     oldComponentTypeID  INT NOT NULL,
     userID              VARCHAR(32) NOT NULL,
-    `timestamp`         datetime NOT NULL,
+    `timestamp`         INT NOT NULL,
     `comment`           VARCHAR(512) NOT NULL,
-    `type`              VARCHAR(16) NOT NULL,
+    `type`              ENUM('created', 'deleted', 'updated'),
     PRIMARY KEY (componentTypeLogID),
     FOREIGN KEY (oldComponentTypeID) REFERENCES `componentType`(componentTypeID),
     FOREIGN KEY (componentTypeID) REFERENCES `componentType`(componentTypeID),
@@ -116,9 +118,9 @@ CREATE TABLE `componentLog` (
     componentID         INT NOT NULL,
     oldComponentID INT NOT NULL,
     userID          VARCHAR(32) NOT NULL,
-    `timestamp`     datetime NOT NULL,
-    `comment`       VARCHAR(512) NOT NULL,
-    `type`          VARCHAR(16) NOT NULL,
+    `timestamp`       INT NOT NULL,
+    `comment`        VARCHAR(512) NOT NULL,
+    `type`            ENUM('created', 'deleted', 'updated'),
     PRIMARY KEY (componentLogID),
     FOREIGN KEY (componentID) REFERENCES `component`(componentID),
     FOREIGN KEY (oldComponentID) REFERENCES `component`(componentID),
@@ -130,9 +132,9 @@ CREATE TABLE `documentLog` (
     documentID      INT NOT NULL,
     oldDocumentID      INT NOT NULL,
     userID          VARCHAR(32) NOT NULL,
-    `timestamp`     datetime NOT NULL,
+    `timestamp`     INT NOT NULL,
     `comment`       VARCHAR(512) NOT NULL,
-    `type`          VARCHAR(16) NOT NULL,
+    `type`          ENUM('created', 'deleted', 'updated'),
     PRIMARY KEY (documentLogID),
     FOREIGN KEY (oldDocumentID) REFERENCES `document`(documentID),
     FOREIGN KEY (userID) REFERENCES `user`(userID)
@@ -157,6 +159,13 @@ CREATE TABLE activeComponent (
     componentTypeID INT NOT NULL,
     FOREIGN KEY (componentID) REFERENCES `component`(componentID),
     FOREIGN KEY (componentTypeID) REFERENCES `componentType`(componentTypeID)
+);
+
+CREATE TABLE activeProjects (
+    ID INT NOT NULL AUTO_INCREMENT,
+    projectID INT NOT NULL, 
+    PRIMARY KEY (ID),
+   FOREIGN KEY (projectID) REFERENCES `project`(projectID)
 );
 
     
