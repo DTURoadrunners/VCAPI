@@ -6,22 +6,21 @@ using System.Net.Http;
 using System;
 using System.Text;
 using VCAPI.Repository.Interfaces;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Options;
+using VCAPI.Options;
 
 namespace VCAPI.Controllers
 {
     [Route("api/")]
     public class LoginController : Controller
     {
-        private readonly Encoding encoding;
-        private readonly IUserRepository repo;
-
-        public LoginController(IUserRepository repo)
+        public struct RegisterCredentials
         {
-            this.repo = repo;
-            encoding = Encoding.UTF8; 
-        }
-
-        public struct RegisterCredentials{
             [Required]
             public string username { get; set; }
             [Required]
@@ -30,11 +29,27 @@ namespace VCAPI.Controllers
             public string CASCODE { get; set; }
         }
 
-        public class LoginCredentials{
+        public class LoginCredentials
+        {
             [Required]
             public string username { get; set; }
             [Required]
             public string password { get; set; }
+        }
+
+        private readonly Encoding encoding;
+        private readonly IUserRepository repo;
+        private readonly JWTOptions tokenSettings;
+        private JwtSecurityTokenHandler jwtSecurityToken;
+        private readonly byte[] symmetricKey;
+
+        public LoginController(IUserRepository repo, IOptions<JWTOptions> settings)
+        {
+            tokenSettings = settings.Value;
+            symmetricKey = Convert.FromBase64String(tokenSettings.secretKey);
+            this.repo = repo;
+            encoding = Encoding.UTF8;
+            jwtSecurityToken = new JwtSecurityTokenHandler();
         }
 
         [HttpPost("signup")]
@@ -64,11 +79,30 @@ namespace VCAPI.Controllers
 
         }
 
+        [HttpPost("verify")]
+        [Authorize]
+        public IActionResult verify()
+        {
+            return Ok();
+        }
+
         [HttpPut("login")]
         public IActionResult Login([FromBody]LoginCredentials credentials)
         {
+            SecurityTokenDescriptor securityTokenRegister = new SecurityTokenDescriptor()
+            {
+                Subject = new System.Security.Claims.ClaimsIdentity(new Claim[]
+                {
+                    new Claim(ClaimTypes.Role, "User")
+                }),
+                Expires = DateTime.Now.AddHours(6),
+                Audience = tokenSettings.audience,
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(symmetricKey), SecurityAlgorithms.HmacSha256Signature)
+            };
+            SecurityToken token = jwtSecurityToken.CreateToken(securityTokenRegister);
+            String response = jwtSecurityToken.WriteToken(token);
             // Lookup user in DB
-            return Ok();
+            return Ok(response);
         }
     }
 }
