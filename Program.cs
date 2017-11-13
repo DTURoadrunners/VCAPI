@@ -19,7 +19,10 @@ namespace VCAPI
 
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
-                .UseStartup<Startup>()
+                .ConfigureAppConfiguration((context, config) =>
+                {
+                    config.AddJsonFile("settings.json", false);
+                }).UseStartup<Startup>()
                 .Build();
     }
 }
