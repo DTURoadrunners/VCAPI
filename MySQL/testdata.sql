@@ -30,12 +30,12 @@ call DTU_Roadrunners.sp_create_category('misc');
 call DTU_Roadrunners.sp_create_category('food');
 
 # INSERT componentType
-call DTU_Roadrunners.sp_create_componenttype('test', 1, 1, 51, 'lorem', @useridDaniel, 'blabla', @err);
-call DTU_Roadrunners.sp_create_componenttype('test 2', 1, 2, 51, 'lorem', @useridDaniel, 'blabla', @err);
-call DTU_Roadrunners.sp_create_componenttype('test 3', 1, 3, 51, 'lorem', @useridDaniel, 'blabla', @err);
-call DTU_Roadrunners.sp_create_componenttype('test 4', 1, 3, 51, 'lorem', @useridCecilie, 'blabla', @err);
-call DTU_Roadrunners.sp_create_componenttype('test dada', 2, 3, 51, 'lorem', @useridCecilie, 'blabla', @err);
-call DTU_Roadrunners.sp_create_componenttype('test da', 3, 3, 51, 'lorem', @useridCecilie, 'blabla', @err);
+call DTU_Roadrunners.sp_create_componenttype('test', 1, 1, 51, 'lorem', @useridDaniel, 'blabla');
+call DTU_Roadrunners.sp_create_componenttype('test 2', 1, 2, 51, 'lorem', @useridDaniel, 'blabla');
+call DTU_Roadrunners.sp_create_componenttype('test 3', 1, 3, 51, 'lorem', @useridDaniel, 'blabla');
+call DTU_Roadrunners.sp_create_componenttype('test 4', 1, 3, 51, 'lorem', @useridCecilie, 'blabla');
+call DTU_Roadrunners.sp_create_componenttype('test dada', 2, 3, 51, 'lorem', @useridCecilie, 'blabla');
+call DTU_Roadrunners.sp_create_componenttype('test da', 3, 3, 51, 'lorem', @useridCecilie, 'blabla');
 
 # INSERT component
 call DTU_Roadrunners.createComponent(1, 'this is being used by Thomas - lel', 'a comment dsd', @useridThomas, 'log comment');
@@ -45,6 +45,11 @@ call DTU_Roadrunners.createComponent(3, 'this is being used by Cecilie - dsds', 
 call DTU_Roadrunners.createComponent(3, 'this is being used by Daniel - dsds', 'a comment fddadfdf', @useridDaniel, 'log comment');
 
 # INSERT document
+call DTU_Roadrunners.trans_create_document('test fil',1, '/etc/project/bla.png', 'lelele', @useridCecilie, 'blabla', @err);
+call DTU_Roadrunners.trans_create_document('test fil2',1, '/etc/project/bla.png', 'lelele', @useridCecilie, 'blabla', @err);
+call DTU_Roadrunners.trans_create_document('test fil3',3, '/etc/project/bla.png', 'lelele', @useridThomas, 'blabla', @err);
+call DTU_Roadrunners.trans_create_document('test fil4',3, '/etc/project/bla.png', 'lelele', @useridThomas, 'blabla', @err);
+call DTU_Roadrunners.trans_create_document('test fil5',2, '/etc/project/statistic.mat', 'lelele', @useridDaniel, 'blabla', @err);
 
 
 
