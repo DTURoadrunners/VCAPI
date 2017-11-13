@@ -138,20 +138,20 @@ CREATE TABLE `documentLog` (
 
 CREATE TABLE activeComponentType (
     ID                  INT NOT NULL AUTO_INCREMENT,
-    projectID           INT NOT NULL,
+    activeProjectID     INT NOT NULL,
     componentTypeID     INT,
     PRIMARY KEY (ID),
-    FOREIGN KEY (projectID) REFERENCES `project`(projectID),
-    FOREIGN KEY (componentTypeID) REFERENCES `componentType`(componentTypeID)
+    FOREIGN KEY (componentTypeID) REFERENCES `componentType`(componentTypeID),
+    FOREIGN KEY (activeProjectID) REFERENCES `activeProjects`(ID)
 );
 
 CREATE TABLE activeDocument (
     ID                  INT NOT NULL AUTO_INCREMENT,
     documentID          INT,
-    componentTypeID     INT NOT NULL,
+    activeComponentTypeID     INT NOT NULL,
     PRIMARY KEY (ID),
     FOREIGN KEY (documentID) REFERENCES `document`(documentID),
-    FOREIGN KEY (componentTypeID) REFERENCES `componentType`(componentTypeID)
+    FOREIGN KEY (activeComponentTypeID) REFERENCES `activeComponentType`(ID)
 );
 
 CREATE TABLE activeComponent (
