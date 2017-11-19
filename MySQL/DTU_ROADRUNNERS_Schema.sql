@@ -94,7 +94,7 @@ CREATE TABLE activeProjects (
 CREATE TABLE `projectLog` (
     projectLogID        INT NOT NULL AUTO_INCREMENT,
     activeProjectID	 	INT NOT NULL,
-    projectID           INT NOT NULL,
+    projectID           INT,
     userID              VARCHAR(32) NOT NULL,
     `timestamp`         INT NOT NULL,
     `comment`           VARCHAR(512) NOT NULL,
@@ -116,7 +116,7 @@ CREATE TABLE activeComponentType (
 
 CREATE TABLE `componentTypeLog` (
     componentTypeLogID      INT NOT NULL AUTO_INCREMENT,
-    componentTypeID         INT NOT NULL,
+    componentTypeID         INT,
     activeComponentTypeID   INT NOT NULL,
     userID                  VARCHAR(32) NOT NULL,
     `timestamp`             INT NOT NULL,
@@ -139,7 +139,7 @@ CREATE TABLE activeComponent (
 
 CREATE TABLE `componentLog` (
     componentLogID          INT NOT NULL AUTO_INCREMENT,
-    componentID             INT NOT NULL,
+    componentID             INT,
     activeComponentID      INT NOT NULL,
     userID                  VARCHAR(32) NOT NULL,
     `timestamp`             INT NOT NULL,
@@ -162,7 +162,7 @@ CREATE TABLE activeDocument (
 
 CREATE TABLE `documentLog` (
     documentLogID       INT NOT NULL AUTO_INCREMENT,
-    documentID          INT NOT NULL,
+    documentID          INT,
     activeDocumentID    INT NOT NULL,
     userID              VARCHAR(32) NOT NULL,
     `timestamp`         INT NOT NULL,
