@@ -75,11 +75,9 @@ CREATE TABLE `component` (
 CREATE TABLE `document`(
     documentID              INT NOT NULL AUTO_INCREMENT,
     filename                VARCHAR(64) NOT NULL,
-    parentComponentTypeID   INT NOT NULL,
     bucketpath              VARCHAR(1024) NOT NULL,
     description             VARCHAR(512) NOT NULL,
-    PRIMARY KEY (documentID),
-    FOREIGN KEY (parentComponentTypeID) REFERENCES `componentType`(componentTypeID)
+    PRIMARY KEY (documentID)
     
 );
 
@@ -131,10 +129,10 @@ CREATE TABLE `componentTypeLog` (
 CREATE TABLE activeComponent (
     ID                  INT NOT NULL AUTO_INCREMENT,
     componentID         INT,
-    activeComponentID     INT NOT NULL,
+    activeComponentTypeID     INT NOT NULL,
     PRIMARY KEY (ID),
     FOREIGN KEY (componentID) REFERENCES `component`(componentID),
-    FOREIGN KEY (activeComponentID) REFERENCES `activeComponentType`(ID)
+    FOREIGN KEY (activeComponentTypeID) REFERENCES `activeComponentType`(ID)
 );
 
 CREATE TABLE `componentLog` (
