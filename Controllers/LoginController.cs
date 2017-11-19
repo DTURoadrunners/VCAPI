@@ -13,6 +13,7 @@ using System.Security.Cryptography;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 using VCAPI.Options;
+using VCAPI.Repository.Models;
 
 namespace VCAPI.Controllers
 {
@@ -87,7 +88,7 @@ namespace VCAPI.Controllers
         }
 
         [HttpPut("login")]
-        public IActionResult Login([FromBody]LoginCredentials credentials)
+        public async  Task<IActionResult> Login([FromBody]LoginCredentials credentials)
         {
             SecurityTokenDescriptor securityTokenRegister = new SecurityTokenDescriptor()
             {
@@ -102,7 +103,10 @@ namespace VCAPI.Controllers
             SecurityToken token = jwtSecurityToken.CreateToken(securityTokenRegister);
             String response = jwtSecurityToken.WriteToken(token);
             // Lookup user in DB
-            return Ok(response);
+
+           UserInfo info = await repo.CreateUser("Hej", "Test");
+
+            return Ok(info);
         }
     }
 }

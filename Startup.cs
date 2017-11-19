@@ -27,9 +27,9 @@ namespace VCAPI
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
-            services.AddSingleton<IUserRepository, MySQLUserRepository>();
             services.AddOptions();
-
+            services.AddSingleton<DatabaseConnector>(new DatabaseConnector(Configuration["ConnectionStrings:Connection"]));
+            services.AddTransient<IUserRepository, MySQLUserRepository>();
             services.Configure<JWTOptions>(Configuration.GetSection("TokenSettings"));
 
             #region JWT

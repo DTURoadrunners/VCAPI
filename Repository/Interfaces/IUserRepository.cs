@@ -8,6 +8,6 @@ namespace VCAPI.Repository.Interfaces
 {
     public interface IUserRepository
     {
-        UserInfo CreateUser(string username, string password);
+        Task<UserInfo> CreateUser(string username, string password);
     }
 }

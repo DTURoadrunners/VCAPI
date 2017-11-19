@@ -13,23 +13,23 @@ namespace VCAPI.Controllers
             return null;
         }
 
-        [HttpPost]
-        public IActionResult createProject([FromBody] ProjectModel model)
-        {
-            return null;
-        }
+        //[HttpPost]
+        //public IActionResult createProject([FromBody] ProjectModel model)
+        //{
+        //    return null;
+        //}
 
-        [HttpGet("{id}")]
-        public IActionResult readProject([FromRoute] int id)
-        {
-            return null;
-        }
+        //[HttpGet("{id}")]
+        //public IActionResult readProject([FromRoute] int id)
+        //{
+        //    return null;
+        //}
 
-        [HttpPut("{id}")]
-        public IActionResult updateProject([FromRoute] int id, [FromBody] ProjectModel model)
-        {
-            return null;
-        }
+        //[HttpPut("{id}")]
+        //public IActionResult updateProject([FromRoute] int id, [FromBody] ProjectModel model)
+        //{
+        //    return null;
+        //}
 
         [HttpDelete("{id}")]
         public IActionResult deleteProject([FromRoute] int id)
