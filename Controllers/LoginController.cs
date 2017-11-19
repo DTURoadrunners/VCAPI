@@ -70,8 +70,11 @@ namespace VCAPI.Controllers
             HttpResponseMessage result = await client.SendAsync(msg);
             if (result.IsSuccessStatusCode)
             {
-                // Create user
-                return Ok();
+                UserInfo info = await repo.CreateUser(credentials.username, credentials.password);
+                if(info != null)
+                 return Ok();
+
+                return StatusCode(500);
             }
             else
             {
@@ -90,23 +93,26 @@ namespace VCAPI.Controllers
         [HttpPut("login")]
         public async  Task<IActionResult> Login([FromBody]LoginCredentials credentials)
         {
-            SecurityTokenDescriptor securityTokenRegister = new SecurityTokenDescriptor()
+
+            if(await repo.Authenticate(credentials.username, credentials.password))
             {
-                Subject = new System.Security.Claims.ClaimsIdentity(new Claim[]
+                SecurityTokenDescriptor securityTokenRegister = new SecurityTokenDescriptor()
                 {
-                    new Claim(ClaimTypes.Role, "User")
+                    Subject = new System.Security.Claims.ClaimsIdentity(new Claim[]
+                {
+                    new Claim(ClaimTypes.NameIdentifier, credentials.username)
                 }),
-                Expires = DateTime.Now.AddHours(6),
-                Audience = tokenSettings.audience,
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(symmetricKey), SecurityAlgorithms.HmacSha256Signature)
-            };
-            SecurityToken token = jwtSecurityToken.CreateToken(securityTokenRegister);
-            String response = jwtSecurityToken.WriteToken(token);
-            // Lookup user in DB
+                    Expires = DateTime.Now.AddHours(6),
+                    Audience = tokenSettings.audience,
+                    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(symmetricKey), SecurityAlgorithms.HmacSha256Signature)
+                };
+                SecurityToken token = jwtSecurityToken.CreateToken(securityTokenRegister);
+                String response = jwtSecurityToken.WriteToken(token);
 
-           UserInfo info = await repo.CreateUser("Hej", "Test");
+                return Ok();
+            }
 
-            return Ok(info);
+            return Unauthorized();
         }
     }
 }
