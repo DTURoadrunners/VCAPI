@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 using VCAPI.Options;
 using VCAPI.Repository.Models;
+using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 
 namespace VCAPI.Controllers
 {
@@ -62,7 +63,7 @@ namespace VCAPI.Controllers
                 Method = HttpMethod.Get,
                 RequestUri = new System.Uri("http://www.campusnet.dtu.dk/data/CurrentUser/Userinfo")
             };
-            msg.Headers.Add("x-appname", "Opslagsystem for økobil");
+            msg.Headers.Add("x-appname", "Opslagsystem for ï¿½kobil");
             msg.Headers.Add("x-token", "3ddfc095-5a62-4162-a058-5bc3784e36d7");
             string token = Convert.ToBase64String(encoding.GetBytes(String.Format("{0}:{1}", credentials.username, credentials.CASCODE)));
           //  string token = encoding.GetString(Convert.FromBase64String(String.Format("{0}:{1}", credentials.username, credentials.CASCODE)));
@@ -70,8 +71,9 @@ namespace VCAPI.Controllers
             HttpResponseMessage result = await client.SendAsync(msg);
             if (result.IsSuccessStatusCode)
             {
-                UserInfo info = await repo.CreateUser(credentials.username, credentials.password);
-                if(info != null)
+                UserInfo i = new UserInfo{userID = credentials.username, password = Encoding.UTF8.GetBytes(credentials.password)};
+                bool success = await repo.CreateUser(i);
+                if(success)
                  return Ok();
 
                 return StatusCode(500);

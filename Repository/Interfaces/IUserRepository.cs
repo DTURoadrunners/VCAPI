@@ -8,12 +8,15 @@ namespace VCAPI.Repository.Interfaces
 {
     public enum RANK
     {
-        GUEST,
+        PROHIBITED,
+        GUEST
     }
     public interface IUserRepository
     {
-        Task<UserInfo> CreateUser(string username, string password);
-        Task<RANK> GetRankForProject(string username, int projId);
+        Task<bool> CreateUser(UserInfo info);
         Task<bool> Authenticate(string username, string password);
+        Task<UserInfo> GetUser(string username);
+        
+        Task<RANK> GetRankForProject(string username, int projId);
     }
 }

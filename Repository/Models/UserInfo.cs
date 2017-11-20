@@ -9,5 +9,7 @@ namespace VCAPI.Repository.Models
     {
         public string name;
         public byte[] password;
+        public string firstname;
+        public string lastname;
     }
 }
