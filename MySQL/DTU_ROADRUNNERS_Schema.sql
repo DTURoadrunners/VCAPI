@@ -24,6 +24,7 @@ CREATE TABLE `user` (
    firstname    VARCHAR(32) NOT NULL, 
    lastname     VARCHAR(32) NOT NULL,
    phonenumber  VARCHAR(32) NOT NULL,
+   password 	VARCHAR(512) NOT NULL,
    PRIMARY KEY (userID)
 );
 
