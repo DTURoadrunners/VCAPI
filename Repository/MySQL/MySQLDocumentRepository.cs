@@ -21,7 +21,7 @@ namespace VCAPI.Repository.MySQL
             connection = conn;
         }
 
-        public async Task<bool> CreateDocument(DocumentInfo info, LogInfo log, int ID)
+        public async Task<bool> CreateDocument(DocumentInfo info, string userid, string comment, int ID)
         {
             using(Connection conn = await connection.Create())
             {
@@ -32,8 +32,8 @@ namespace VCAPI.Repository.MySQL
                 command.Parameters.AddWithValue("@_activeComponentTypeID", ID);
                 command.Parameters.AddWithValue("@_bucketpath", info.bucketpath);
                 command.Parameters.AddWithValue("@_description", info.description);
-                command.Parameters.AddWithValue("@userID", log.userID);
-                command.Parameters.AddWithValue("@logComment", log.comment);
+                command.Parameters.AddWithValue("@userID", userid);
+                command.Parameters.AddWithValue("@logComment", comment);
 
                 return await command.ExecuteNonQueryAsync() == 1;          
             }
@@ -87,45 +87,45 @@ namespace VCAPI.Repository.MySQL
             }
         }
         
-        public async Task<bool> UpdateDocument(DocumentInfo info, LogInfo log)
+        public async Task<bool> UpdateDocument(DocumentInfo info, string userid, string comment, int activeID)
         {
             using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
                 command.CommandText = "updateDocument";
                 command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@activeID", log.activeID);
+                command.Parameters.AddWithValue("@activeID", activeID);
                 command.Parameters.AddWithValue("@filename", info.filename);
                 command.Parameters.AddWithValue("@bucketPath", info.bucketpath);
                 command.Parameters.AddWithValue("@description", info.description);
-                command.Parameters.AddWithValue("@userID", log.userID);
-                command.Parameters.AddWithValue("@logComment", log.comment);
+                command.Parameters.AddWithValue("@userID", userid);
+                command.Parameters.AddWithValue("@logComment", comment);
                
                return await command.ExecuteNonQueryAsync() == 1;
             }
         }
-        public async Task<bool> DeleteDocument(int ID, LogInfo log)
+        public async Task<bool> DeleteDocument(int ID, string userid, string comment)
         {
             using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
                 command.CommandText = "deleteDocument";
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@activeID", ID);
-                command.Parameters.AddWithValue("@userID", log.userID);
-                command.Parameters.AddWithValue("@logComment", log.comment);
+                command.Parameters.AddWithValue("@userID", userid);
+                command.Parameters.AddWithValue("@logComment", comment);
                
                return await command.ExecuteNonQueryAsync() == 1;
             }
         }
 
-        public async Task<bool> RollbackDocument(int ID, LogInfo log)
+        public async Task<bool> RollbackDocument(int ID, string userid, string comment)
         {
             using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
                 command.CommandText = "rollbackDocument";
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@logID", ID);
-                command.Parameters.AddWithValue("@userID", log.userID);
-                command.Parameters.AddWithValue("@commentParam", log.comment);
+                command.Parameters.AddWithValue("@userID", userid);
+                command.Parameters.AddWithValue("@commentParam", comment);
                
                return await command.ExecuteNonQueryAsync() == 1;
             }

@@ -8,10 +8,10 @@ namespace VCAPI.Repository.Interfaces
 {
     public interface IDocumentRepository
     {
-        Task<bool> CreateDocument(DocumentInfo info, LogInfo log, int ID);
-        Task<bool> UpdateDocument(DocumentInfo info, LogInfo log);
-        Task<bool> DeleteDocument(int ID, LogInfo log);
-        Task<bool> RollbackDocument(int ID, LogInfo log);
+        Task<bool> CreateDocument(DocumentInfo info, string userid, string comment, int ID);
+        Task<bool> UpdateDocument(DocumentInfo info, string userid, string comment, int activeID);
+        Task<bool> DeleteDocument(int ID, string userid, string comment);
+        Task<bool> RollbackDocument(int ID, string userid, string comment);
         Task<DocumentInfo> GetDocument(int Id);
         Task<List<DocumentInfo>> getDocuments(int id);
     }

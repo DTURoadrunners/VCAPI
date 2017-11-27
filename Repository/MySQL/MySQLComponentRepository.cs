@@ -18,7 +18,7 @@ namespace VCAPI.Repository.MySQL
     {
         readonly DatabaseConnector connector;
 
-        public async Task<bool> CreateComponent(int activeComponentTypeID, ComponentInfo component, LogInfo log)
+        public async Task<bool> CreateComponent(int activeComponentTypeID, ComponentInfo component, string userid, string comment)
         {
             using (Connection conn = await connector.Create())
             {
@@ -28,13 +28,13 @@ namespace VCAPI.Repository.MySQL
                 command.Parameters.AddWithValue("@activeComponentTypeID", activeComponentTypeID);
                 command.Parameters.AddWithValue("@status", component.status);
                 command.Parameters.AddWithValue("@comment", component.comment);
-                command.Parameters.AddWithValue("@userID", log.userID);
-                command.Parameters.AddWithValue("@logComment", log.comment);
+                command.Parameters.AddWithValue("@userID", userid);
+                command.Parameters.AddWithValue("@logComment", comment);
                 return await command.ExecuteNonQueryAsync() == 1;
             }
         }
 
-        public async Task<bool> DeleteComponent(int activeID, LogInfo log)
+        public async Task<bool> DeleteComponent(int activeID, string userid, string comment)
         {
             using (Connection conn = await connector.Create())
             {
@@ -42,8 +42,8 @@ namespace VCAPI.Repository.MySQL
                 command.CommandText = "createComponent";
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@activeID", activeID);
-                command.Parameters.AddWithValue("@userID", log.userID);
-                command.Parameters.AddWithValue("@logComment", log.comment);
+                command.Parameters.AddWithValue("@userID", userid);
+                command.Parameters.AddWithValue("@logComment", comment);
                 return await command.ExecuteNonQueryAsync() == 1;
             }
         }
@@ -98,7 +98,7 @@ namespace VCAPI.Repository.MySQL
             }
         }
 
-        public async Task<bool> UpdateComponent(int activeComponentTypeID, ComponentInfo component, LogInfo log)
+        public async Task<bool> UpdateComponent(int activeComponentTypeID, ComponentInfo component, string userid, string comment)
         {
             using (Connection conn = await connector.Create())
             {
@@ -108,8 +108,8 @@ namespace VCAPI.Repository.MySQL
                 command.Parameters.AddWithValue("@activeComponentTypeID", activeComponentTypeID);
                 command.Parameters.AddWithValue("@status", component.status);
                 command.Parameters.AddWithValue("@comment", component.comment);
-                command.Parameters.AddWithValue("@userID", log.userID);
-                command.Parameters.AddWithValue("@logComment", log.comment);
+                command.Parameters.AddWithValue("@userID", userid);
+                command.Parameters.AddWithValue("@logComment", comment);
                 return await command.ExecuteNonQueryAsync() == 1;
             }
         }
