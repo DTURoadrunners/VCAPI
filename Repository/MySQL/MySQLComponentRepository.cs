@@ -14,11 +14,11 @@ using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 
 namespace VCAPI.Repository.MySQL
 {
-    public class MySQLComponent : IComponentRepository
+    public class MySQLComponentRepository : IComponentRepository
     {
         readonly DatabaseConnector connector;
 
-        public async Task<bool> CreateComponent(int activeComponentTypeID, Component component, LogInfo log)
+        public async Task<bool> CreateComponent(int activeComponentTypeID, ComponentInfo component, LogInfo log)
         {
             using (Connection conn = await connector.Create())
             {
@@ -34,7 +34,7 @@ namespace VCAPI.Repository.MySQL
             }
         }
 
-        public async Task<bool> DeleteComponent(string activeID, LogInfo log)
+        public async Task<bool> DeleteComponent(int activeID, LogInfo log)
         {
             using (Connection conn = await connector.Create())
             {
@@ -48,7 +48,7 @@ namespace VCAPI.Repository.MySQL
             }
         }
 
-        public async Task<Component> ReadComponent(string id)
+        public async Task<ComponentInfo> GetComponent(int id)
         {
             using (Connection conn = await connector.Create())
             {
@@ -62,15 +62,43 @@ namespace VCAPI.Repository.MySQL
                 {
                     return null;
                 }
-                Component result = new Component();
-                result.id = reader.GetString(0);
+                ComponentInfo result = new ComponentInfo();
+                result.id = reader.GetInt32(0);
                 result.status = reader.GetString(1);
                 result.comment = reader.GetString(2);
                 return result;
             }
         }
 
-        public async Task<bool> UpdateComponent(int activeComponentTypeID, Component component, LogInfo log)
+        public async Task<List<ComponentInfo>> GetComponents(int id)
+        {
+            using (Connection conn = await connector.Create())
+            {
+                MySqlCommand command = conn.Get().CreateCommand();
+                command.CommandText = "getActiveComponents";
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@componentTypeID", id);
+                command.Parameters["@ID"].Direction = ParameterDirection.Input;
+                DbDataReader reader = await command.ExecuteReaderAsync();
+                if (!await reader.NextResultAsync())
+                {
+                    return null;
+                }
+                List<ComponentInfo> list = new List<ComponentInfo>();
+                while (reader.NextResult())
+                {
+                    ComponentInfo info = new ComponentInfo();
+                    info.id = reader.GetInt32(0);
+                    info.status = reader.GetString(1);
+                    info.comment = reader.GetString(2);
+                    list.Add(info);
+                }
+
+                return list;
+            }
+        }
+
+        public async Task<bool> UpdateComponent(int activeComponentTypeID, ComponentInfo component, LogInfo log)
         {
             using (Connection conn = await connector.Create())
             {

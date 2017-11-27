@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 
 namespace VCAPI.Repository.Models
 {
-    public class Component
+    public class ComponentInfo
     {
-        public string id;
+        public int id;
         public string status;
         public string comment;
     }
