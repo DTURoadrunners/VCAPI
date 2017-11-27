@@ -58,6 +58,7 @@ namespace VCAPI.Controllers
             }
         }
 
+        [Authorize]
         [HttpPut("{projectId}")]
         public async Task<IActionResult> updateProject([FromRoute] int id, [FromBody] ProjectInfo model)
         {
@@ -73,6 +74,7 @@ namespace VCAPI.Controllers
         }
 
         [HttpDelete("{projectId}")]
+        [Authorize]
         public async Task<IActionResult> deleteProject([FromRoute] int id)
         {
             if(!await resourceAccess.IsSuperAdmin(User.Identity.Name))
