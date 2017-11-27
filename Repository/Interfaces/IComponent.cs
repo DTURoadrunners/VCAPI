@@ -6,7 +6,7 @@ using VCAPI.Repository.Models;
 
 namespace VCAPI.Repository.Interfaces
 {
-    public interface IComponent
+    public interface IComponentRepository
     {
         Task<bool> CreateComponent(int activeComponentTypeID, Component component, LogInfo log);
         Task<Component> ReadComponent(string id);

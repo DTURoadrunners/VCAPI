@@ -14,7 +14,7 @@ using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 
 namespace VCAPI.Repository.MySQL
 {
-    public class MySQLComponent : IComponent
+    public class MySQLComponent : IComponentRepository
     {
         readonly DatabaseConnector connector;
 
