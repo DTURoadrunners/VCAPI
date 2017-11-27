@@ -14,38 +14,37 @@ using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 
 namespace VCAPI.Repository.MySQL
 {
-    public class MySQLComponentTypeRepository : IComponentTypeRepository
+    public class MySQLDocumentRepository : IDocumentRepository
     {
         DatabaseConnector connection;
-        public MySQLComponentTypeRepository(DatabaseConnector conn)
+        public MySQLDocumentRepository(DatabaseConnector conn)
         {
             connection = conn;
         }
 
-        public async Task<bool> CreateComponentType(ComponentTypeInfo info, LogInfo log)
+        public async Task<bool> CreateDocument(DocumentInfo info, LogInfo log, int ID)
         {
             using(Connection conn = await connection.Create())
             {
                 MySqlCommand command = conn.Get().CreateCommand();
-                command.CommandText = "creatComponenttype";
+                command.CommandText = "creatDocument";
                 command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@nameparam", info.name);
-                command.Parameters.AddWithValue("@activeProjectIDParam", log.activeProjectIDParam);
-                command.Parameters.AddWithValue("@categoryID", info.categoryID);
-                command.Parameters.AddWithValue("@storageparam", info.storage);
-                command.Parameters.AddWithValue("@description", info.description);
-                command.Parameters.AddWithValue("@userid", log.userID);
-                command.Parameters.AddWithValue("@commentparam", log.comment);
+                command.Parameters.AddWithValue("@_filename", info.filename);
+                command.Parameters.AddWithValue("@_activeComponentTypeID", ID);
+                command.Parameters.AddWithValue("@_bucketpath", info.bucketpath);
+                command.Parameters.AddWithValue("@_description", info.description);
+                command.Parameters.AddWithValue("@userID", log.userID);
+                command.Parameters.AddWithValue("@logComment", log.comment);
 
                 return await command.ExecuteNonQueryAsync() == 1;          
             }
         }
 
-         public async Task<ComponentTypeInfo> GetComponentType(int Id)
+         public async Task<DocumentInfo> GetDocument(int Id)
         {
             using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
-                command.CommandText = "getComponenttype";
+                command.CommandText = "getDocument";
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@ID", Id);
                 command.Parameters["@ID"].Direction = ParameterDirection.Input;
@@ -54,36 +53,34 @@ namespace VCAPI.Repository.MySQL
                     return null;
                 }
 
-                ComponentTypeInfo info = new ComponentTypeInfo();
+                DocumentInfo info = new DocumentInfo();
                 info.id = reader.GetInt32(0);
-                info.name = reader.GetString(1);
-                info.categoryID = reader.GetInt32(2);
-                info.storage = reader.GetInt32(3);
-                info.description = reader.GetString(4);
+                info.filename = reader.GetString(1);
+                info.bucketpath = reader.GetString(2);
+                info.description = reader.GetString(3);
                 return info;
             }
         }
 
-        public async Task<List<ComponentTypeInfo>> GetComponentTypes(int projectId)
+        public async Task<List<DocumentInfo>> getDocuments(int id)
         {
             using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
-                command.CommandText = "getActiveComponenttypes";
+                command.CommandText = "getActiveDocuments";
                 command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@projectID", projectId);
+                command.Parameters.AddWithValue("@componentTypeID", id);
                 command.Parameters["@ID"].Direction = ParameterDirection.Input;
                 DbDataReader reader = await command.ExecuteReaderAsync();
                 if(!await reader.NextResultAsync()){
                     return null;
                 }
-                List <ComponentTypeInfo> list = new List<ComponentTypeInfo>();
+                List <DocumentInfo> list = new List<DocumentInfo>();
                 while (reader.NextResult()){
-                    ComponentTypeInfo info = new ComponentTypeInfo();
+                    DocumentInfo info = new DocumentInfo();
                     info.id = reader.GetInt32(0);
-                    info.name = reader.GetString(1);
-                    info.categoryID = reader.GetInt32(2);
-                    info.storage = reader.GetInt32(3);
-                    info.description = reader.GetString(4);
+                    info.filename = reader.GetString(1);
+                    info.bucketpath = reader.GetString(2);
+                    info.description = reader.GetString(3);
                     list.Add(info);
                 }
                 
@@ -91,46 +88,45 @@ namespace VCAPI.Repository.MySQL
             }
         }
         
-        public async Task<bool> UpdateComponentType(ComponentTypeInfo info, LogInfo log)
+        public async Task<bool> UpdateDocument(DocumentInfo info, LogInfo log)
         {
             using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
-                command.CommandText = "updateComponenttype";
+                command.CommandText = "updateDocument";
                 command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@nameparam", info.name);
                 command.Parameters.AddWithValue("@activeID", log.activeID);
-                command.Parameters.AddWithValue("@categoryID", info.categoryID);
-                command.Parameters.AddWithValue("@storageparam", info.storage);
-                command.Parameters.AddWithValue("@descriptionparam", info.description);
-                command.Parameters.AddWithValue("@userid", log.userID);
-                command.Parameters.AddWithValue("@commentparam", log.comment);
+                command.Parameters.AddWithValue("@filename", info.filename);
+                command.Parameters.AddWithValue("@bucketPath", info.bucketpath);
+                command.Parameters.AddWithValue("@description", info.description);
+                command.Parameters.AddWithValue("@userID", log.userid);
+                command.Parameters.AddWithValue("@logComment", log.comment);
                
                return await command.ExecuteNonQueryAsync() == 1;
             }
         }
-        public async Task<bool> DeleteComponentType(int ID, LogInfo log)
+        public async Task<bool> DeleteDocument(int ID, LogInfo log)
         {
             using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
-                command.CommandText = "deleteComponenttype";
+                command.CommandText = "deleteDocument";
                 command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@activeComponentTypeID", ID);
-                command.Parameters.AddWithValue("@userid", log.userID);
-                command.Parameters.AddWithValue("@commentparam", log.comment);
+                command.Parameters.AddWithValue("@activeID", ID);
+                command.Parameters.AddWithValue("@userID", log.userid);
+                command.Parameters.AddWithValue("@logComment", log.comment);
                
                return await command.ExecuteNonQueryAsync() == 1;
             }
         }
 
-        public async Task<bool> RollbackComponentType(int ID, LogInfo log)
+        public async Task<bool> RollbackDocument(int ID, LogInfo log)
         {
             using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
-                command.CommandText = "rollbackComponenttype";
+                command.CommandText = "rollbackDocument";
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@logID", ID);
-                command.Parameters.AddWithValue("@userid", log.userID);
-                command.Parameters.AddWithValue("@commentparam", log.comment);
+                command.Parameters.AddWithValue("@userID", log.userid);
+                command.Parameters.AddWithValue("@commentParam", log.comment);
                
                return await command.ExecuteNonQueryAsync() == 1;
             }

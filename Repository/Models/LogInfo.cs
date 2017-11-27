@@ -10,7 +10,7 @@ namespace VCAPI.Repository.Models
         public int logId;
         public string userID;
         public string comment;
-        public int activeProjectID;
+        public int activeID;
         public int timestamp;
         public string type;
         public int id;
