@@ -10,27 +10,26 @@ using MySql.Data.MySqlClient;
 using System.Data;
 using System.Data.Common;
 using System.Text;
-using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 
 namespace VCAPI.Repository.MySQL
 {
     public class MySQLComponentTypeRepository : IComponentTypeRepository
     {
-        DatabaseConnector connection;
+        readonly DatabaseConnector connection;
         public MySQLComponentTypeRepository(DatabaseConnector conn)
         {
             connection = conn;
         }
 
-        public async Task<bool> CreateComponentType(ComponentTypeInfo info, LogInfo log)
+        public async Task<bool> CreateComponentType(ComponentTypeInfo info, LogInfo log, int id)
         {
             using(Connection conn = await connection.Create())
             {
                 MySqlCommand command = conn.Get().CreateCommand();
-                command.CommandText = "creatComponenttype";
+                command.CommandText = "createComponenttype";
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@nameparam", info.name);
-                command.Parameters.AddWithValue("@activeProjectIDParam", log.activeProjectIDParam);
+                command.Parameters.AddWithValue("@activeProjectIDParam", id);
                 command.Parameters.AddWithValue("@categoryID", info.categoryID);
                 command.Parameters.AddWithValue("@storageparam", info.storage);
                 command.Parameters.AddWithValue("@description", info.description);
