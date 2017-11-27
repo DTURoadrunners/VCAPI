@@ -10,13 +10,12 @@ using MySql.Data.MySqlClient;
 using System.Data;
 using System.Data.Common;
 using System.Text;
-using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 
 namespace VCAPI.Repository.MySQL
 {
     public class MySQLDocumentRepository : IDocumentRepository
     {
-        DatabaseConnector connection;
+        readonly DatabaseConnector connection;
         public MySQLDocumentRepository(DatabaseConnector conn)
         {
             connection = conn;
@@ -98,7 +97,7 @@ namespace VCAPI.Repository.MySQL
                 command.Parameters.AddWithValue("@filename", info.filename);
                 command.Parameters.AddWithValue("@bucketPath", info.bucketpath);
                 command.Parameters.AddWithValue("@description", info.description);
-                command.Parameters.AddWithValue("@userID", log.userid);
+                command.Parameters.AddWithValue("@userID", log.userID);
                 command.Parameters.AddWithValue("@logComment", log.comment);
                
                return await command.ExecuteNonQueryAsync() == 1;
@@ -111,7 +110,7 @@ namespace VCAPI.Repository.MySQL
                 command.CommandText = "deleteDocument";
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@activeID", ID);
-                command.Parameters.AddWithValue("@userID", log.userid);
+                command.Parameters.AddWithValue("@userID", log.userID);
                 command.Parameters.AddWithValue("@logComment", log.comment);
                
                return await command.ExecuteNonQueryAsync() == 1;
@@ -125,7 +124,7 @@ namespace VCAPI.Repository.MySQL
                 command.CommandText = "rollbackDocument";
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@logID", ID);
-                command.Parameters.AddWithValue("@userID", log.userid);
+                command.Parameters.AddWithValue("@userID", log.userID);
                 command.Parameters.AddWithValue("@commentParam", log.comment);
                
                return await command.ExecuteNonQueryAsync() == 1;

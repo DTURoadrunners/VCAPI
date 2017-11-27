@@ -2,7 +2,7 @@ namespace VCAPI.Repository.Models
 {
     public class ProjectInfo
     {
-        string name;
-        string description;
+        public string name;
+        public int id;
     }
 }
