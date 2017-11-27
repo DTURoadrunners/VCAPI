@@ -7,9 +7,9 @@ namespace VCAPI.Repository.Models
 {
     public class UserInfo
     {
-        public string name;
+        public string userID;
         public byte[] password;
         public string firstname;
-        public string lastname;
+        public string lastname; 
     }
 }

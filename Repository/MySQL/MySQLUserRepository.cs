@@ -80,24 +80,5 @@ namespace VCAPI.Repository.MySQL
                 return await command.ExecuteNonQueryAsync() == 1;
            }
         }
-
-        public async Task<RANK> GetRankForProject(string username, int projId)
-        {
-            using(Connection conn = await connector.Create()){
-                MySqlCommand command = conn.Get().CreateCommand();
-                command.CommandText = "getUserRole";
-                command.Parameters.AddWithValue("@userID", username);
-                command.Parameters.AddWithValue("@projectID", projId);
-                DbDataReader reader = await command.ExecuteReaderAsync();
-                if(!await reader.NextResultAsync()){
-                    return RANK.PROHIBITED;
-                }
-                else{
-                    int rank = reader.GetInt32(0);
-                    return (RANK)rank;
-                }
-
-            }
-        }
     }
 }

@@ -66,7 +66,6 @@ namespace VCAPI.Controllers
             msg.Headers.Add("x-appname", "Opslagsystem for �kobil");
             msg.Headers.Add("x-token", "3ddfc095-5a62-4162-a058-5bc3784e36d7");
             string token = Convert.ToBase64String(encoding.GetBytes(String.Format("{0}:{1}", credentials.username, credentials.CASCODE)));
-          //  string token = encoding.GetString(Convert.FromBase64String(String.Format("{0}:{1}", credentials.username, credentials.CASCODE)));
             msg.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", token);
             HttpResponseMessage result = await client.SendAsync(msg);
             if (result.IsSuccessStatusCode)
@@ -74,9 +73,9 @@ namespace VCAPI.Controllers
                 UserInfo i = new UserInfo{userID = credentials.username, password = Encoding.UTF8.GetBytes(credentials.password)};
                 bool success = await repo.CreateUser(i);
                 if(success)
-                 return Ok();
-
-                return StatusCode(500);
+                    return Ok();
+                else
+                    return BadRequest("User may already exists");
             }
             else
             {
@@ -111,7 +110,7 @@ namespace VCAPI.Controllers
                 SecurityToken token = jwtSecurityToken.CreateToken(securityTokenRegister);
                 String response = jwtSecurityToken.WriteToken(token);
 
-                return Ok();
+                return Ok(response);
             }
 
             return Unauthorized();

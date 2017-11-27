@@ -32,7 +32,7 @@ namespace VCAPI
             services.AddTransient<IUserRepository, MySQLUserRepository>();
             services.Configure<JWTOptions>(Configuration.GetSection("TokenSettings"));
 
-            #region JWT
+#region JWT
 
             JWTOptions jwt = Configuration.GetSection("TokenSettings").Get<JWTOptions>();
 
