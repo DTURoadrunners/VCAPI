@@ -184,4 +184,9 @@ CREATE TABLE friendshipComponent (
     FOREIGN KEY (friendRight) REFERENCES `activeComponent`(ID),
     FOREIGN KEY (projectID) REFERENCES `project`(projectID)
 );
-    
+
+insert into role VALUES(NULL, 'PROHIBITED');
+insert into role VALUES(NULL, 'GUEST');
+insert into role VALUES(NULL, 'STUDENT');
+insert into role VALUES(NULL, 'ADMIN');
+insert into role VALUES(NULL, 'SUPERADMIN');
