@@ -28,8 +28,8 @@ namespace VCAPI.Repository.MySQL
                 command.Parameters.AddWithValue("@activeComponentTypeID", activeComponentTypeID);
                 command.Parameters.AddWithValue("@status", component.status);
                 command.Parameters.AddWithValue("@comment", component.comment);
-                command.Parameters.AddWithValue("@userID", log.userId);
-                command.Parameters.AddWithValue("@logComment", log.logComment);
+                command.Parameters.AddWithValue("@userID", log.userID);
+                command.Parameters.AddWithValue("@logComment", log.comment);
                 return await command.ExecuteNonQueryAsync() == 1;
             }
         }
@@ -42,8 +42,8 @@ namespace VCAPI.Repository.MySQL
                 command.CommandText = "createComponent";
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@activeID", activeID);
-                command.Parameters.AddWithValue("@userID", log.userId);
-                command.Parameters.AddWithValue("@logComment", log.logComment);
+                command.Parameters.AddWithValue("@userID", log.userID);
+                command.Parameters.AddWithValue("@logComment", log.comment);
                 return await command.ExecuteNonQueryAsync() == 1;
             }
         }
@@ -80,8 +80,8 @@ namespace VCAPI.Repository.MySQL
                 command.Parameters.AddWithValue("@activeComponentTypeID", activeComponentTypeID);
                 command.Parameters.AddWithValue("@status", component.status);
                 command.Parameters.AddWithValue("@comment", component.comment);
-                command.Parameters.AddWithValue("@userID", log.userId);
-                command.Parameters.AddWithValue("@logComment", log.logComment);
+                command.Parameters.AddWithValue("@userID", log.userID);
+                command.Parameters.AddWithValue("@logComment", log.comment);
                 return await command.ExecuteNonQueryAsync() == 1;
             }
         }
