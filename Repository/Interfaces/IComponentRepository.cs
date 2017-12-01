@@ -8,10 +8,11 @@ namespace VCAPI.Repository.Interfaces
 {
     public interface IComponentRepository
     {
-        Task<bool> CreateComponent(int activeComponentTypeID, ComponentInfo component, LogInfo log);
+        Task<int> CreateComponent(int activeComponentTypeID, ComponentInfo component, string userid, string comment);
         Task<ComponentInfo> GetComponent(int id);
         Task<List<ComponentInfo>> GetComponents(int id);
-        Task<bool> UpdateComponent(int activeComponentTypeID, ComponentInfo component, LogInfo log);
-        Task<bool> DeleteComponent(int activeID, LogInfo log);
+        Task<bool> UpdateComponent(int activeComponentTypeID, ComponentInfo component, string userid, string comment);
+        Task<bool> DeleteComponent(int activeID, string userid, string comment);
+        Task<bool> RollbackComponent(int id, string userId, string comment);
     }
 }

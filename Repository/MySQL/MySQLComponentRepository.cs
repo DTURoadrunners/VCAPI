@@ -18,7 +18,7 @@ namespace VCAPI.Repository.MySQL
     {
         readonly DatabaseConnector connector;
 
-        public async Task<int> CreateComponent(int activeComponentTypeID, ComponentInfo component, LogInfo log)
+        public async Task<int> CreateComponent(int activeComponentTypeID, ComponentInfo component, string userid, string comment)
         {
             using (Connection conn = await connector.Create())
             {
@@ -28,13 +28,14 @@ namespace VCAPI.Repository.MySQL
                 command.Parameters.AddWithValue("@activeComponentTypeID", activeComponentTypeID);
                 command.Parameters.AddWithValue("@status", component.status);
                 command.Parameters.AddWithValue("@comment", component.comment);
-                command.Parameters.AddWithValue("@userID", log.userID);
-                command.Parameters.AddWithValue("@logComment", log.comment);
-                return await command.ExecuteNonQueryAsync();
+                command.Parameters.AddWithValue("@userID", userid);
+                command.Parameters.AddWithValue("@logComment", comment);
+                return await command.ExecuteNonQueryAsync(); //UNDONE: This always returns -1, how do we return the id of the component?
+                //return (int) await command.ExecuteScalarAsync() //Maybe? This gets the first column of the inserted row
             }
         }
 
-        public async Task<bool> DeleteComponent(int activeID, LogInfo log)
+        public async Task<bool> DeleteComponent(int activeID, string userid, string comment)
         {
             using (Connection conn = await connector.Create())
             {
@@ -42,8 +43,8 @@ namespace VCAPI.Repository.MySQL
                 command.CommandText = "createComponent";
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@activeID", activeID);
-                command.Parameters.AddWithValue("@userID", log.userID);
-                command.Parameters.AddWithValue("@logComment", log.comment);
+                command.Parameters.AddWithValue("@userID", userid);
+                command.Parameters.AddWithValue("@logComment", comment);
                 return await command.ExecuteNonQueryAsync() == 1;
             }
         }
@@ -98,7 +99,21 @@ namespace VCAPI.Repository.MySQL
             }
         }
 
-        public async Task<bool> UpdateComponent(int activeComponentTypeID, ComponentInfo component, LogInfo log)
+        public async Task<bool> RollbackComponent(int logId, string userId, string comment)
+        {
+            using (Connection conn = await connector.Create())
+            {
+                MySqlCommand command = conn.Get().CreateCommand();
+                command.CommandText = "rollbackComponent";
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@logID", logId);
+                command.Parameters.AddWithValue("@userid", userId);
+                command.Parameters.AddWithValue("@ommentparam", comment);
+                return await command.ExecuteNonQueryAsync() == 1;
+            }
+        }
+
+        public async Task<bool> UpdateComponent(int activeComponentTypeID, ComponentInfo component, string userid, string comment)
         {
             using (Connection conn = await connector.Create())
             {
@@ -108,8 +123,8 @@ namespace VCAPI.Repository.MySQL
                 command.Parameters.AddWithValue("@activeComponentTypeID", activeComponentTypeID);
                 command.Parameters.AddWithValue("@status", component.status);
                 command.Parameters.AddWithValue("@comment", component.comment);
-                command.Parameters.AddWithValue("@userID", log.userID);
-                command.Parameters.AddWithValue("@logComment", log.comment);
+                command.Parameters.AddWithValue("@userID", userid);
+                command.Parameters.AddWithValue("@logComment", comment);
                 return await command.ExecuteNonQueryAsync() == 1;
             }
         }

@@ -51,13 +51,13 @@ namespace VCAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateComponent([FromRoute] int projectId, [FromRoute] int componentTypeId, [FromBody] ComponentInfo model, [FromBody] string userId, [FromBody] string comment)
         {
-            if (await resourceAccess.GetRankForProject(User.Identity.Name, projectId) < Repository.RANK.STUDENT);
+            if (await resourceAccess.GetRankForProject(User.Identity.Name, projectId) < Repository.RANK.STUDENT)
             {
                 return Unauthorized();
             }
 
             int id = await repository.CreateComponent(componentTypeId, model, userId, comment);
-            if (id != -1)
+            if (id == -1)
             {
                 return new BadRequestObjectResult("Failed to create component");
             }
@@ -72,11 +72,46 @@ namespace VCAPI.Controllers
             {
                 return Unauthorized();
             }
+
+            if (!await repository.UpdateComponent(componentTypeId, model, userId, comment))
+            {
+                return new BadRequestObjectResult("Failed to update component: " + componentId);
+            }
+
+            return Ok();
         }
 
         [Authorize]
         [HttpPut("{componentId}")]
-        public async Task<IActionResult> DeleteComponent(){
+        public async Task<IActionResult> DeleteComponent([FromRoute] int projectId, [FromRoute] int componentId, [FromBody] string userId, [FromBody] string comment)
+        {
+            if (await resourceAccess.GetRankForProject(User.Identity.Name, projectId) < Repository.RANK.STUDENT)
+            {
+                return Unauthorized();
+            }
+
+            if (!await repository.DeleteComponent(componentId, userId, comment))
+            {
+                return new BadRequestObjectResult("Failed to delete component: " + componentId);
+            }
+
+            return Ok();
+        }
+
+        [Authorize]
+        [HttpPut("{componentId}")]
+        public async Task<IActionResult> rollbackComponent([FromRoute] int projectId, [FromRoute] int logId, [FromBody] string userId, [FromBody] string comment)
+        {
+            if (await resourceAccess.GetRankForProject(User.Identity.Name, projectId) < Repository.RANK.STUDENT)
+            {
+                return Unauthorized();
+            }
+
+            if (!await repository.RollbackComponent(logId, userId, comment))
+            {
+                return new BadRequestObjectResult("Failed to rollback log: " + logId);
+            }
+
             return Ok();
         }
 
