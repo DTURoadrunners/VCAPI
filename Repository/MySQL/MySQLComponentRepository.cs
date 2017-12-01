@@ -63,11 +63,7 @@ namespace VCAPI.Repository.MySQL
                 {
                     return null;
                 }
-                ComponentInfo result = new ComponentInfo();
-                result.id = reader.GetInt32(0);
-                result.status = reader.GetString(1);
-                result.comment = reader.GetString(2);
-                return result;
+                return new ComponentInfo(reader.GetInt32(0), reader.GetString(1), reader.GetString(2));
             }
         }
 
@@ -88,11 +84,7 @@ namespace VCAPI.Repository.MySQL
                 List<ComponentInfo> list = new List<ComponentInfo>();
                 while (reader.NextResult())
                 {
-                    ComponentInfo info = new ComponentInfo();
-                    info.id = reader.GetInt32(0);
-                    info.status = reader.GetString(1);
-                    info.comment = reader.GetString(2);
-                    list.Add(info);
+                    list.Add(new ComponentInfo(reader.GetInt32(0), reader.GetString(1), reader.GetString(2)));
                 }
 
                 return list;

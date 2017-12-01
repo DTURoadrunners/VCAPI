@@ -52,14 +52,8 @@ namespace VCAPI.Repository.MySQL
                 if(!await reader.NextResultAsync()){
                     return null;
                 }
-
-                ComponentTypeInfo info = new ComponentTypeInfo();
-                info.id = reader.GetInt32(0);
-                info.name = reader.GetString(1);
-                info.categoryID = reader.GetInt32(2);
-                info.storage = reader.GetInt32(3);
-                info.description = reader.GetString(4);
-                return info;
+                
+                return new ComponentTypeInfo(reader.GetInt32(0), reader.GetString(1), reader.GetInt32(2), reader.GetInt32(3), reader.GetString(4));
             }
         }
 
@@ -77,13 +71,7 @@ namespace VCAPI.Repository.MySQL
                 }
                 List <ComponentTypeInfo> list = new List<ComponentTypeInfo>();
                 while (reader.NextResult()){
-                    ComponentTypeInfo info = new ComponentTypeInfo();
-                    info.id = reader.GetInt32(0);
-                    info.name = reader.GetString(1);
-                    info.categoryID = reader.GetInt32(2);
-                    info.storage = reader.GetInt32(3);
-                    info.description = reader.GetString(4);
-                    list.Add(info);
+                    list.Add(new ComponentTypeInfo(reader.GetInt32(0), reader.GetString(1), reader.GetInt32(2), reader.GetInt32(3), reader.GetString(4)));
                 }
                 
                 return list;

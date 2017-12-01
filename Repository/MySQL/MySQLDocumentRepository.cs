@@ -51,13 +51,8 @@ namespace VCAPI.Repository.MySQL
                 if(!await reader.NextResultAsync()){
                     return null;
                 }
-
-                DocumentInfo info = new DocumentInfo();
-                info.id = reader.GetInt32(0);
-                info.filename = reader.GetString(1);
-                info.bucketpath = reader.GetString(2);
-                info.description = reader.GetString(3);
-                return info;
+                
+                return new DocumentInfo(reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3));
             }
         }
 
@@ -75,12 +70,7 @@ namespace VCAPI.Repository.MySQL
                 }
                 List <DocumentInfo> list = new List<DocumentInfo>();
                 while (reader.NextResult()){
-                    DocumentInfo info = new DocumentInfo();
-                    info.id = reader.GetInt32(0);
-                    info.filename = reader.GetString(1);
-                    info.bucketpath = reader.GetString(2);
-                    info.description = reader.GetString(3);
-                    list.Add(info);
+                    list.Add(new DocumentInfo(reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3)));
                 }
                 
                 return list;

@@ -66,7 +66,7 @@ namespace VCAPI.Controllers
 
         [Authorize]
         [HttpPut("{componentId}")]
-        public async Task<IActionResult> UpdateComponent([FromRoute] int projectId, [FromRoute] int componentTypeId, [FromRoute] int componentId, [FromBody] ComponentInfo model, [FromBody] string userId, [FromBody] string comment)
+        public async Task<IActionResult> UpdateComponent([FromRoute] int projectId, [FromRoute] int componentTypeId, [FromBody] ComponentInfo model, [FromBody] string userId, [FromBody] string comment)
         {
             if (await resourceAccess.GetRankForProject(User.Identity.Name, projectId) < Repository.RANK.STUDENT)
             {
@@ -75,7 +75,7 @@ namespace VCAPI.Controllers
 
             if (!await repository.UpdateComponent(componentTypeId, model, userId, comment))
             {
-                return new BadRequestObjectResult("Failed to update component: " + componentId);
+                return new BadRequestObjectResult("Failed to update component: " + model.id);
             }
 
             return Ok();

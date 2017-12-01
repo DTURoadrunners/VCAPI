@@ -21,16 +21,93 @@ namespace VCAPI.Repository.MySQL
             connection = conn;
         }
 
-        public async Task<bool> CreateCategory(string name)
+        public async Task<int> CreateCategory(int projectId, CategoryInfo model, string userId, string comment)
         {
             using(Connection conn = await connection.Create())
             {
                 MySqlCommand command = conn.Get().CreateCommand();
                 command.CommandText = "createCategory";
                 command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@nameparam", name);
+                command.Parameters.AddWithValue("@projectId", projectId);
+                command.Parameters.AddWithValue("@nameparam", model.name);
+                command.Parameters.AddWithValue("@userid", userId);
+                command.Parameters.AddWithValue("@commentparam", comment);
 
-                return await command.ExecuteNonQueryAsync() == 1;          
+                return await command.ExecuteNonQueryAsync();          
+            }
+        }
+
+        public async Task<bool> DeleteCategory(int projectId, int id, string userId, string comment)
+        {
+            using (Connection conn = await connection.Create())
+            {
+                MySqlCommand command = conn.Get().CreateCommand();
+                command.CommandText = "deleteCategory";
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@projectId", projectId);
+                command.Parameters.AddWithValue("@id", id);
+                command.Parameters.AddWithValue("@userid", userId);
+                command.Parameters.AddWithValue("@commentparam", comment);
+
+                return await command.ExecuteNonQueryAsync() == 1;
+            }
+        }
+
+        public async Task<List<CategoryInfo>> GetCategories(int projectId)
+        {
+            using (Connection conn = await connection.Create())
+            {
+                MySqlCommand command = conn.Get().CreateCommand();
+                command.CommandText = "getCategories";
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@projectId", projectId);
+                DbDataReader reader = await command.ExecuteReaderAsync();
+                if (!await reader.NextResultAsync())
+                {
+                    return null;
+                }
+                List<CategoryInfo> list = new List<CategoryInfo>();
+                while (reader.NextResult())
+                {
+                    list.Add(new CategoryInfo(reader.GetInt32(0), reader.GetString(1)));
+                }
+
+                return list;
+            }
+        }
+
+        public async Task<CategoryInfo> GetCategory(int id)
+        {
+            using (Connection conn = await connection.Create())
+            {
+                MySqlCommand command = conn.Get().CreateCommand();
+                command.CommandText = "getCategory";
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@id", id);
+                DbDataReader reader = await command.ExecuteReaderAsync();
+                if (!await reader.NextResultAsync())
+                {
+                    return null;
+                }
+
+                return new CategoryInfo(reader.GetInt32(0), reader.GetString(1));
+            }
+        }
+
+        public async Task<bool> UpdateCategory(int projectId, CategoryInfo model, string userId, string comment)
+        {
+            using (Connection conn = await connection.Create())
+            {
+                MySqlCommand command = conn.Get().CreateCommand();
+                command.CommandText = "updateCategory";
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@projectId", projectId);
+                command.Parameters.AddWithValue("@id", model.id);
+                command.Parameters.AddWithValue("@name", model.name);
+                command.Parameters.AddWithValue("@userid", userId);
+                command.Parameters.AddWithValue("@commentparam", comment);
+
+                return await command.ExecuteNonQueryAsync() == 1;
             }
         }
     }       

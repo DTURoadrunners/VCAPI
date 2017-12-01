@@ -61,11 +61,8 @@ namespace VCAPI.Repository.MySQL
                 if(!await reader.NextResultAsync()){
                     return null;
                 }
-
-                ProjectInfo info = new ProjectInfo();
-                info.id = reader.GetInt32(0);
-                info.name = reader.GetString(1);
-                return info;
+                
+                return new ProjectInfo(reader.GetInt32(0), reader.GetString(1));
             }
         }
 
@@ -81,10 +78,7 @@ namespace VCAPI.Repository.MySQL
                 }
                 List <ProjectInfo> list = new List<ProjectInfo>();
                 while (reader.NextResult()){
-                    ProjectInfo info = new ProjectInfo();
-                    info.id = reader.GetInt32(0);
-                    info.name = reader.GetString(1);
-                    list.Add(info);
+                    list.Add(new ProjectInfo(reader.GetInt32(0), reader.GetString(1)));
                 }
                 
                 return list;

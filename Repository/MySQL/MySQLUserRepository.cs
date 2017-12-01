@@ -53,11 +53,8 @@ namespace VCAPI.Repository.MySQL
                     return null;
                 }
 
-                UserInfo info = new UserInfo();
-                info.userID = reader.GetString(0);
+                UserInfo info = new UserInfo(reader.GetString(0), reader.GetString(2), reader.GetString(3));
                 reader.GetBytes(1, 0, info.password, 0, 0);
-                info.firstname = reader.GetString(2);
-                info.lastname = reader.GetString(3);
                 return info;
             }
         }

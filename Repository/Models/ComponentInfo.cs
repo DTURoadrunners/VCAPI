@@ -10,5 +10,12 @@ namespace VCAPI.Repository.Models
         public int id;
         public string status;
         public string comment;
+
+        public ComponentInfo(int id, string status, string comment)
+        {
+            this.id = id;
+            this.status = status;
+            this.comment = comment;
+        }
     }
 }

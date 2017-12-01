@@ -11,5 +11,13 @@ namespace VCAPI.Repository.Models
         public string filename;
         public string description;
         public string bucketpath;
+
+        public DocumentInfo(int id, string filename, string description, string bucketpath)
+        {
+            this.id = id;
+            this.filename = filename;
+            this.description = description;
+            this.bucketpath = bucketpath;
+        }
     }
 }
