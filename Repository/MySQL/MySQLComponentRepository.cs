@@ -18,7 +18,7 @@ namespace VCAPI.Repository.MySQL
     {
         readonly DatabaseConnector connector;
 
-        public async Task<bool> CreateComponent(int activeComponentTypeID, ComponentInfo component, LogInfo log)
+        public async Task<int> CreateComponent(int activeComponentTypeID, ComponentInfo component, LogInfo log)
         {
             using (Connection conn = await connector.Create())
             {
@@ -30,7 +30,7 @@ namespace VCAPI.Repository.MySQL
                 command.Parameters.AddWithValue("@comment", component.comment);
                 command.Parameters.AddWithValue("@userID", log.userID);
                 command.Parameters.AddWithValue("@logComment", log.comment);
-                return await command.ExecuteNonQueryAsync() == 1;
+                return await command.ExecuteNonQueryAsync();
             }
         }
 

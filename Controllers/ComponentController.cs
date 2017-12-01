@@ -49,20 +49,29 @@ namespace VCAPI.Controllers
         [VerifyModelState]
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> CreateComponent([FromRoute] int projectId, [FromRoute] int componentTypeId, [FromRoute] int componentId, [FromBody] ComponentInfo model, [FromBody] LogInfo log)
+        public async Task<IActionResult> CreateComponent([FromRoute] int projectId, [FromRoute] int componentTypeId, [FromBody] ComponentInfo model, [FromBody] string userId, [FromBody] string comment)
         {
             if (await resourceAccess.GetRankForProject(User.Identity.Name, projectId) < Repository.RANK.STUDENT);
             {
                 return Unauthorized();
             }
 
-            await repository.CreateComponent(componentTypeId, model, log);
+            int id = await repository.CreateComponent(componentTypeId, model, userId, comment);
+            if (id != -1)
+            {
+                return new BadRequestObjectResult("Failed to create component");
+            }
+            return Created("api/project/" + projectId + "/componentType/" + componentTypeId + "/component/", id);
         }
 
         [Authorize]
         [HttpPut("{componentId}")]
-        public async Task<IActionResult> UpdateComponent(){
-            return Ok();
+        public async Task<IActionResult> UpdateComponent([FromRoute] int projectId, [FromRoute] int componentTypeId, [FromRoute] int componentId, [FromBody] ComponentInfo model, [FromBody] string userId, [FromBody] string comment)
+        {
+            if (await resourceAccess.GetRankForProject(User.Identity.Name, projectId) < Repository.RANK.STUDENT)
+            {
+                return Unauthorized();
+            }
         }
 
         [Authorize]
