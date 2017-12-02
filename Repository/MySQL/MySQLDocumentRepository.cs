@@ -77,13 +77,13 @@ namespace VCAPI.Repository.MySQL
             }
         }
         
-        public async Task<bool> UpdateDocument(DocumentInfo info, string userId, string comment)
+        public async Task<bool> UpdateDocument(DocumentInfo info, string userId, string comment, int ID)
         {
             using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
                 command.CommandText = "updateDocument";
                 command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@activeID", log.activeID);
+                command.Parameters.AddWithValue("@activeID", ID);
                 command.Parameters.AddWithValue("@filename", info.filename);
                 command.Parameters.AddWithValue("@bucketPath", info.bucketpath);
                 command.Parameters.AddWithValue("@description", info.description);

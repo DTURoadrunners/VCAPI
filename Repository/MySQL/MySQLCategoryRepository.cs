@@ -15,7 +15,7 @@ namespace VCAPI.Repository.MySQL
 {
     public class MySQLCategoryRepository : ICategoryRepository
     {
-        DatabaseConnector connection;
+        readonly DatabaseConnector connection;
         public MySQLCategoryRepository(DatabaseConnector conn)
         {
             connection = conn;

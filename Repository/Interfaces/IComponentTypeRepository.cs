@@ -9,7 +9,7 @@ namespace VCAPI.Repository.Interfaces
     public interface IComponentTypeRepository
     {
         Task<bool> CreateComponentType(ComponentTypeInfo info, string userId, string comment, int id);
-        Task<bool> UpdateComponentType(ComponentTypeInfo info, string userId, string comment);
+        Task<bool> UpdateComponentType(ComponentTypeInfo info, string userId, string comment, int ID);
         Task<bool> DeleteComponentType(int ID, string userId, string comment);
         Task<bool> RollbackComponentType(int ID, string userId, string comment);
         Task<ComponentTypeInfo> GetComponentType(int Id);

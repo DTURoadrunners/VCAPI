@@ -78,14 +78,14 @@ namespace VCAPI.Repository.MySQL
             }
         }
         
-        public async Task<bool> UpdateComponentType(ComponentTypeInfo info, string userId, string comment)
+        public async Task<bool> UpdateComponentType(ComponentTypeInfo info, string userId, string comment, int ID)
         {
             using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
                 command.CommandText = "updateComponenttype";
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@nameparam", info.name);
-                command.Parameters.AddWithValue("@activeID", log.activeID);
+                command.Parameters.AddWithValue("@activeID", ID);
                 command.Parameters.AddWithValue("@categoryID", info.categoryID);
                 command.Parameters.AddWithValue("@storageparam", info.storage);
                 command.Parameters.AddWithValue("@descriptionparam", info.description);

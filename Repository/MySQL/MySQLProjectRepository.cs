@@ -92,7 +92,7 @@ namespace VCAPI.Repository.MySQL
                 command.CommandText = "updateProject";
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@nameparam", inf.name);
-                command.Parameters.AddWithValue("@activeProjectID", log.activeID);
+                command.Parameters.AddWithValue("@activeProjectID", id);
                 command.Parameters.AddWithValue("@userid", userId);
                 command.Parameters.AddWithValue("@commentparam", comment);
                

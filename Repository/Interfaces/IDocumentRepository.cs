@@ -9,7 +9,7 @@ namespace VCAPI.Repository.Interfaces
     public interface IDocumentRepository
     {
         Task<bool> CreateDocument(DocumentInfo info, string userId, string comment, int ID);
-        Task<bool> UpdateDocument(DocumentInfo info, string userId, string comment);
+        Task<bool> UpdateDocument(DocumentInfo info, string userId, string comment, int ID);
         Task<bool> DeleteDocument(int ID, string userId, string comment);
         Task<bool> RollbackDocument(int ID, string userId, string comment);
         Task<DocumentInfo> GetDocument(int Id);
