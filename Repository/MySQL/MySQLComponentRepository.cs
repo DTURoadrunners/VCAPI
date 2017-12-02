@@ -19,7 +19,7 @@ namespace VCAPI.Repository.MySQL
         readonly DatabaseConnector connector;
         public MySQLComponentRepository(DatabaseConnector conn)
         {
-            connection = conn;
+            connector = conn;
         }
 
         public async Task<int> CreateComponent(int activeComponentTypeID, ComponentInfo component, string userid, string comment)
