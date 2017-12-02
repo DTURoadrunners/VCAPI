@@ -16,6 +16,8 @@ START TRANSACTION;
 		INSERT INTO component  VALUES(NULL, _status, _comment);
 		SET @newID = LAST_INSERT_ID();
         INSERT INTO activeComponent VALUES(NULL, @newID, activeComponentTypeID);
+		SET @newNewID = LAST_INSERT_ID();
 		INSERT INTO componentLog VALUES(NULL, @newID, activeComponentTypeID, userID, UNIX_TIMESTAMP(NOW()), logComment, "created");
+		SELECT @newNewID as ID;
 	COMMIT;
 END
