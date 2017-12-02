@@ -21,7 +21,7 @@ namespace VCAPI.Repository.MySQL
             connection = conn;
         }
 
-        public async Task<bool> CreateComponentType(ComponentTypeInfo info, LogInfo log, int id)
+        public async Task<bool> CreateComponentType(ComponentTypeInfo info, string userId, string comment, int id)
         {
             using(Connection conn = await connection.Create())
             {
@@ -33,8 +33,8 @@ namespace VCAPI.Repository.MySQL
                 command.Parameters.AddWithValue("@categoryID", info.categoryID);
                 command.Parameters.AddWithValue("@storageparam", info.storage);
                 command.Parameters.AddWithValue("@description", info.description);
-                command.Parameters.AddWithValue("@userid", log.userID);
-                command.Parameters.AddWithValue("@commentparam", log.comment);
+                command.Parameters.AddWithValue("@userid", userId);
+                command.Parameters.AddWithValue("@commentparam", comment);
 
                 return await command.ExecuteNonQueryAsync() == 1;          
             }
@@ -78,7 +78,7 @@ namespace VCAPI.Repository.MySQL
             }
         }
         
-        public async Task<bool> UpdateComponentType(ComponentTypeInfo info, LogInfo log)
+        public async Task<bool> UpdateComponentType(ComponentTypeInfo info, string userId, string comment)
         {
             using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
@@ -89,35 +89,35 @@ namespace VCAPI.Repository.MySQL
                 command.Parameters.AddWithValue("@categoryID", info.categoryID);
                 command.Parameters.AddWithValue("@storageparam", info.storage);
                 command.Parameters.AddWithValue("@descriptionparam", info.description);
-                command.Parameters.AddWithValue("@userid", log.userID);
-                command.Parameters.AddWithValue("@commentparam", log.comment);
+                command.Parameters.AddWithValue("@userid", userId);
+                command.Parameters.AddWithValue("@commentparam", comment);
                
                return await command.ExecuteNonQueryAsync() == 1;
             }
         }
-        public async Task<bool> DeleteComponentType(int ID, LogInfo log)
+        public async Task<bool> DeleteComponentType(int ID, string userId, string comment)
         {
             using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
                 command.CommandText = "deleteComponenttype";
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@activeComponentTypeID", ID);
-                command.Parameters.AddWithValue("@userid", log.userID);
-                command.Parameters.AddWithValue("@commentparam", log.comment);
+                command.Parameters.AddWithValue("@userid", userId);
+                command.Parameters.AddWithValue("@commentparam", comment);
                
                return await command.ExecuteNonQueryAsync() == 1;
             }
         }
 
-        public async Task<bool> RollbackComponentType(int ID, LogInfo log)
+        public async Task<bool> RollbackComponentType(int ID, string userId, string comment)
         {
             using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
                 command.CommandText = "rollbackComponenttype";
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@logID", ID);
-                command.Parameters.AddWithValue("@userid", log.userID);
-                command.Parameters.AddWithValue("@commentparam", log.comment);
+                command.Parameters.AddWithValue("@userid", userId);
+                command.Parameters.AddWithValue("@commentparam", comment);
                
                return await command.ExecuteNonQueryAsync() == 1;
             }

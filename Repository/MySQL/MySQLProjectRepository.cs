@@ -20,7 +20,7 @@ namespace VCAPI.Repository.MySQL
         {
             connection = conn;
         }
-        public async Task<bool> CreateProject(LogInfo log, string name)
+        public async Task<bool> CreateProject(string userId, string comment, string name)
         {
             using(Connection conn = await connection.Create())
             {
@@ -28,22 +28,22 @@ namespace VCAPI.Repository.MySQL
                 command.CommandText = "createProject";
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@nameparam", name);
-                command.Parameters.AddWithValue("@userid", name);
-                command.Parameters.AddWithValue("@commentparam", name);
+                command.Parameters.AddWithValue("@userid", userId);
+                command.Parameters.AddWithValue("@commentparam", comment);
                 
                 return await command.ExecuteNonQueryAsync() == 1;          
             }
         }
 
-        public async Task<bool> DeleteProject(int id, LogInfo log)
+        public async Task<bool> DeleteProject(int id, string userId, string comment)
         {
              using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
                 command.CommandText = "deleteDocument";
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@activeProjectID", id);
-                command.Parameters.AddWithValue("@userid", log.userID);
-                command.Parameters.AddWithValue("@commentparam", log.comment);
+                command.Parameters.AddWithValue("@userid", userId);
+                command.Parameters.AddWithValue("@commentparam", comment);
                
                return await command.ExecuteNonQueryAsync() == 1;
             }
@@ -85,7 +85,7 @@ namespace VCAPI.Repository.MySQL
             }
         }
 
-        public async Task<bool> UpdateProject(ProjectInfo inf, int id, LogInfo log)
+        public async Task<bool> UpdateProject(ProjectInfo inf, int id, string userId, string comment)
         {
              using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
@@ -93,22 +93,22 @@ namespace VCAPI.Repository.MySQL
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@nameparam", inf.name);
                 command.Parameters.AddWithValue("@activeProjectID", log.activeID);
-                command.Parameters.AddWithValue("@userid", log.userID);
-                command.Parameters.AddWithValue("@commentparam", log.comment);
+                command.Parameters.AddWithValue("@userid", userId);
+                command.Parameters.AddWithValue("@commentparam", comment);
                
                return await command.ExecuteNonQueryAsync() == 1;
             }
         }
 
-         public async Task<bool> RollbackProject(int id, LogInfo log)
+         public async Task<bool> RollbackProject(int id, string userId, string comment)
         {
             using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
                 command.CommandText = "rollbackProject";
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@logID", id);
-                command.Parameters.AddWithValue("@userID", log.userID);
-                command.Parameters.AddWithValue("@commentParam", log.comment);
+                command.Parameters.AddWithValue("@userID", userId);
+                command.Parameters.AddWithValue("@commentParam", comment);
                
                return await command.ExecuteNonQueryAsync() == 1;
             }
