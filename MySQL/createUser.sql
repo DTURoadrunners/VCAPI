@@ -1,11 +1,18 @@
-CREATE DEFINER=`root`@`localhost` PROCEDURE `createUser`(in ID varchar(32), in firstnameparam VARCHAR(32), in lastnameparam varchar(32), IN phonenumberparam varchar(32), IN passwordparam VARCHAR(512), out err int)
+DELIMITER \\
+
+DROP PROCEDURE IF EXISTS `createUser`\\
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `createUser`(in ID varchar(32), in firstnameparam VARCHAR(32), in lastnameparam varchar(32), IN phonenumberparam INT, IN passwordparam VARCHAR(1024))
 BEGIN
+DECLARE EXIT HANDLER FOR 1062
+SIGNAL SQLSTATE '45000'
+SET MESSAGE_TEXT = 'User already exists';
 DECLARE EXIT HANDLER FOR SQLEXCEPTION, SQLWARNING
 BEGIN
-SET err = 1;
 ROLLBACK;
-END;  
-SET err = 0;
+RESIGNAL;
+END;
 START TRANSACTION;
-	insert into user values(ID, firstnameparam, lastnameparam, phonenumberparam, passwordparam);
-END
+	insert into user values(ID, firstnameparam, lastnameparam, phonenumberparam, passwordparam, 0);
+    COMMIT;
+END\\	

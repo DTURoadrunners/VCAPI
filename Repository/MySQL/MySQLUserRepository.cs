@@ -35,9 +35,13 @@ namespace VCAPI.Repository.MySQL
         public async Task<bool> Authenticate(string username, string password)
         {
            UserInfo info = await GetUser(username);
-           byte[] hash = (KeyDerivation.Pbkdf2(password, bsalt, KeyDerivationPrf.HMACSHA512, HashSettings.iterations, HashSettings.hashSize));
-            
-            return (hash == info.password);
+           if(info != null){
+            byte[] hash = (KeyDerivation.Pbkdf2(password, bsalt, KeyDerivationPrf.HMACSHA512, HashSettings.iterations, HashSettings.hashSize));
+            return (hash.SequenceEqual(info.password));
+           }
+           else{
+               return false;
+           }
         }
 
         public async Task<UserInfo> GetUser(string username)
@@ -49,16 +53,17 @@ namespace VCAPI.Repository.MySQL
                 command.Parameters.AddWithValue("@userID", username);
                 command.Parameters["@userID"].Direction = ParameterDirection.Input;
                 DbDataReader reader = await command.ExecuteReaderAsync();
-                if(!await reader.NextResultAsync()){
+                if(!reader.Read()){
                     return null;
                 }
-
                 UserInfo info = new UserInfo{ 
                     userID = reader.GetString(0), 
-                    firstname = reader.GetString(2), 
-                    lastname = reader.GetString(3)
+                    firstname = reader.GetString(1), 
+                    lastname = reader.GetString(2),
+                    phonenumber = reader.GetInt32(3),
+                    password = Convert.FromBase64String(reader.GetString(4)),
+                    superuser = reader.GetBoolean(5)
                 };
-                reader.GetBytes(1, 0, info.password, 0, 0);
                 return info;
             }
         }
@@ -76,9 +81,16 @@ namespace VCAPI.Repository.MySQL
 
                 byte[] hash = (KeyDerivation.Pbkdf2(Encoding.UTF8.GetString(info.password), bsalt, KeyDerivationPrf.HMACSHA512, HashSettings.iterations, HashSettings.hashSize));
 
-
-                command.Parameters.AddWithValue("@passwordparam", Convert.ToBase64String(hash));
-                return await command.ExecuteNonQueryAsync() == 1;
+                string pass = Convert.ToBase64String(hash);
+                command.Parameters.AddWithValue("@passwordparam", pass);
+                try{
+                    await command.ExecuteNonQueryAsync();
+                    return true;
+                }
+                // Duplicate key.. most likely
+                catch(MySqlException){
+                    return false;
+                }
            }
         }
 

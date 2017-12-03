@@ -23,8 +23,8 @@ CREATE TABLE `user` (
    userID       VARCHAR(32) NOT NULL,
    firstname    VARCHAR(32) NOT NULL, 
    lastname     VARCHAR(32) NOT NULL,
-   phonenumber  VARCHAR(32) NOT NULL,
-   password 	VARCHAR(512) NOT NULL,
+   phonenumber  INT NOT NULL,
+   password 	VARCHAR(1024) NOT NULL,
    PRIMARY KEY (userID)
 );
 

@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using VCAPI.Filters;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Net.Http;
 using System;
@@ -25,6 +26,10 @@ namespace VCAPI.Controllers
         {
             [Required]
             public string username { get; set; }
+            [Required]
+            public string firstname { get; set; }
+            [Required]
+            public string lastname { get; set; }
             [Required]
             public string password { get; set; }
             [Required]
@@ -57,6 +62,7 @@ namespace VCAPI.Controllers
         [HttpPost("signup")]
         [VerifyModelState]
         public async Task<IActionResult> Signup([FromBody] RegisterCredentials credentials){
+            
             HttpClient client = new HttpClient();
             HttpRequestMessage msg = new HttpRequestMessage()
             {
@@ -70,7 +76,7 @@ namespace VCAPI.Controllers
             HttpResponseMessage result = await client.SendAsync(msg);
             if (result.IsSuccessStatusCode)
             {
-                UserInfo i = new UserInfo{userID = credentials.username, password = Encoding.UTF8.GetBytes(credentials.password)};
+                UserInfo i = new UserInfo{userID = credentials.username, firstname = credentials.firstname, lastname = credentials.lastname, password = Encoding.UTF8.GetBytes(credentials.password)};
                 bool success = await repo.CreateUser(i);
                 if(success)
                     return Ok();
@@ -81,14 +87,13 @@ namespace VCAPI.Controllers
             {
                 return BadRequest("Failed to verify login with campusnet");
             }
-
         }
 
         [HttpPost("verify")]
         [Authorize]
         public IActionResult verify()
         {
-            return Ok("Hello, " + User.Identity.Name);
+            return Ok("Hello, " + User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value);
         }
 
         [HttpPut("login")]

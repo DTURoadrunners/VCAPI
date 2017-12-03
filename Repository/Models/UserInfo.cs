@@ -11,5 +11,7 @@ namespace VCAPI.Repository.Models
         public byte[] password;
         public string firstname;
         public string lastname;
+        public int  phonenumber;
+        public bool superuser;
     }
 }
