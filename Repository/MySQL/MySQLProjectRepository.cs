@@ -20,7 +20,8 @@ namespace VCAPI.Repository.MySQL
         {
             connection = conn;
         }
-        public async Task<bool> CreateProject(string userId, string comment, string name)
+
+        public async Task<int> CreateProject(string userId, string name)
         {
             using(Connection conn = await connection.Create())
             {
@@ -29,9 +30,12 @@ namespace VCAPI.Repository.MySQL
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@nameparam", name);
                 command.Parameters.AddWithValue("@userid", userId);
-                command.Parameters.AddWithValue("@commentparam", comment);
                 
-                return await command.ExecuteNonQueryAsync() == 1;          
+                DbDataReader reader =  await command.ExecuteReaderAsync();          
+                if(await reader.NextResultAsync())
+                    return reader.GetInt32(0);
+                else
+                    return -1;
             }
         }
 
@@ -113,5 +117,6 @@ namespace VCAPI.Repository.MySQL
                return await command.ExecuteNonQueryAsync() == 1;
             }
         }
+
     }
 }

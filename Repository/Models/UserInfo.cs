@@ -11,12 +11,5 @@ namespace VCAPI.Repository.Models
         public byte[] password;
         public string firstname;
         public string lastname;
-
-        public UserInfo(string userID, string firstname, string lastname)
-        {
-            this.userID = userID;
-            this.firstname = firstname;
-            this.lastname = lastname;
-        }
     }
 }

@@ -53,7 +53,11 @@ namespace VCAPI.Repository.MySQL
                     return null;
                 }
 
-                UserInfo info = new UserInfo(reader.GetString(0), reader.GetString(2), reader.GetString(3));
+                UserInfo info = new UserInfo{ 
+                    userID = reader.GetString(0), 
+                    firstname = reader.GetString(2), 
+                    lastname = reader.GetString(3)
+                };
                 reader.GetBytes(1, 0, info.password, 0, 0);
                 return info;
             }
@@ -77,5 +81,18 @@ namespace VCAPI.Repository.MySQL
                 return await command.ExecuteNonQueryAsync() == 1;
            }
         }
+
+        public async Task<bool> UpdateUser(UserInfo user)
+        {
+            using(Connection conn = await connector.Create()){
+                MySqlCommand command = conn.Get().CreateCommand();
+                command.CommandText = "updateUser";
+                command.CommandType = CommandType.StoredProcedure;
+
+
+                return await command.ExecuteNonQueryAsync() == 1;
+            }
+        }
     }
 }
+

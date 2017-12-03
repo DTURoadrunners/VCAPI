@@ -10,6 +10,8 @@ namespace VCAPI.Repository.Interfaces
     {
         Task<bool> CreateUser(UserInfo info);
         Task<bool> Authenticate(string username, string password);
-        Task<UserInfo> GetUser(string username);        
+        Task<UserInfo> GetUser(string username);
+
+        Task<bool> UpdateUser(UserInfo user);
     }
 }

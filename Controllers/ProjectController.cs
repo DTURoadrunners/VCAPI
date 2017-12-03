@@ -36,7 +36,7 @@ namespace VCAPI.Controllers
                 return Unauthorized();
             }
             
-            int id = await repository.CreateProject(info);
+            int id = await repository.CreateProject(info.name, User.Identity.Name);
             if(id == -1){
                 // TODO: Return 500
                 return new BadRequestObjectResult("Failed to create project");
@@ -60,14 +60,14 @@ namespace VCAPI.Controllers
 
         [Authorize]
         [HttpPut("{projectId}")]
-        public async Task<IActionResult> updateProject([FromRoute] int id, [FromBody] ProjectInfo model)
+        public async Task<IActionResult> updateProject([FromRoute] int id, [FromBody] ProjectInfo model, [FromBody]string reason)
         {
             RANK rank = await resourceAccess.GetRankForProject(User.Identity.Name, id);
             if(rank < RANK.ADMIN){
                 return Unauthorized();
             }
 
-            if(! await repository.UpdateProject(model, id)){
+            if(!await repository.UpdateProject(model, id, User.Identity.Name, reason)){
                 return BadRequest("Did not change project");
             }
             return Ok();
@@ -75,11 +75,11 @@ namespace VCAPI.Controllers
 
         [HttpDelete("{projectId}")]
         [Authorize]
-        public async Task<IActionResult> deleteProject([FromRoute] int id)
+        public async Task<IActionResult> deleteProject([FromRoute] int id, [FromBody] string reason)
         {
             if(!await resourceAccess.IsSuperAdmin(User.Identity.Name))
                 return Unauthorized();
-            if(!await repository.DeleteProject(id)){
+            if(!await repository.DeleteProject(id, User.Identity.Name, reason)){
                 return BadRequest("Project was not deleted");
             }
             return Ok();

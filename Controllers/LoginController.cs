@@ -88,7 +88,7 @@ namespace VCAPI.Controllers
         [Authorize]
         public IActionResult verify()
         {
-            return Ok();
+            return Ok("Hello, " + User.Identity.Name);
         }
 
         [HttpPut("login")]

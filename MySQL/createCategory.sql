@@ -8,5 +8,9 @@ IF(SELECT NOT EXISTS (
 THEN
 	INSERT INTO category (name)
     VALUES (LOWER(nameparam));
+    SELECT LAST_INSERT_ID() as ID;
+ELSEIF
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = "Such a catagory already exists";
 END IF;
 END

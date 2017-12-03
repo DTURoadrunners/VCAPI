@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`localhost` PROCEDURE `createProject`(IN nameparam VARCHAR(64), IN userid VARCHAR(32), IN commentparam VARCHAR(512), OUT err INT)
+CREATE DEFINER=`root`@`localhost` PROCEDURE `createProject`(IN nameparam VARCHAR(64), IN userid VARCHAR(32), OUT err INT)
 BEGIN 
 DECLARE EXIT HANDLER FOR SQLEXCEPTION, SQLWARNING
 BEGIN
@@ -16,6 +16,6 @@ START TRANSACTION;
 	VALUES (@newID);
 	
     INSERT INTO projectLog 
-    VALUES (NULL, LAST_INSERT_ID(), @newID, userid, UNIX_TIMESTAMP(NOW()), commentparam, 'created'); 
+    VALUES (NULL, LAST_INSERT_ID(), @newID, userid, UNIX_TIMESTAMP(NOW()), 'Created project', 'created'); 
 
 END

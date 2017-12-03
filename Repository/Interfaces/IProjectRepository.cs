@@ -9,8 +9,9 @@ namespace VCAPI.Repository.Interfaces
     
     public interface IProjectRepository
     {
-         Task<bool> CreateProject(string userId, string comment, string name);
+         Task<int> CreateProject(string userId, string name);
          Task<bool> DeleteProject(int id, string userId, string comment);
+
          Task<ProjectInfo> GetProject(int id);
          Task<List<ProjectInfo>> GetProjects();
          Task<bool> UpdateProject(ProjectInfo inf, int id, string userId, string comment);
