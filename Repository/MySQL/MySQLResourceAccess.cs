@@ -23,6 +23,23 @@ namespace VCAPI.Repository
             connector = conn;
         }
 
+        public async Task<bool> AssignRankForProject(string username, int projId, RANK rank)
+        {
+            using (Connection conn = await connector.Create())
+            {
+                bool success = true;
+                MySqlCommand command = conn.Get().CreateCommand();
+                command.CommandText = "connectUserProject";
+                command.Parameters.AddWithValue("@userid", username);
+                command.Parameters.AddWithValue("@projectid", projId);
+                command.Parameters.AddWithValue("@roleid", rank);
+                command.Parameters.AddWithValue("@iserror", success);
+                command.Parameters["iserror"].Direction = System.Data.ParameterDirection.Output;
+                await command.ExecuteNonQueryAsync();
+                return success;5
+            }
+        }
+
         public async Task<RANK> GetRankForProject(string username, int projId)
         {
             using(Connection conn = await connector.Create()){
@@ -31,7 +48,7 @@ namespace VCAPI.Repository
                 command.Parameters.AddWithValue("@userID", username);
                 command.Parameters.AddWithValue("@projectID", projId);
                 DbDataReader reader = await command.ExecuteReaderAsync();
-                if(!await reader.NextResultAsync()){
+                if(!await reader.ReadAsync()){
                     return RANK.PROHIBITED;
                 }
                 else{

@@ -9,7 +9,7 @@ using VCAPI.Repository.Models;
 
 namespace VCAPI.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/projects")]
     public class ProjectController : Controller
     {
         private readonly IProjectRepository repository;
