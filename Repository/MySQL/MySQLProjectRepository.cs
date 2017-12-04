@@ -31,11 +31,7 @@ namespace VCAPI.Repository.MySQL
                 command.Parameters.AddWithValue("@nameparam", name);
                 command.Parameters.AddWithValue("@userid", userId);
                 
-                DbDataReader reader =  await command.ExecuteReaderAsync();          
-                if(await reader.NextResultAsync())
-                    return reader.GetInt32(0);
-                else
-                    return -1;
+                return await command.ExecuteNonQueryAsync();
             }
         }
 

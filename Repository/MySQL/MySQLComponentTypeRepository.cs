@@ -21,7 +21,7 @@ namespace VCAPI.Repository.MySQL
             connection = conn;
         }
 
-        public async Task<bool> CreateComponentType(ComponentTypeInfo info, string userId, string comment, int id)
+        public async Task<int> CreateComponentType(ComponentTypeInfo info, string userId, string comment, int id)
         {
             using(Connection conn = await connection.Create())
             {
@@ -36,7 +36,7 @@ namespace VCAPI.Repository.MySQL
                 command.Parameters.AddWithValue("@userid", userId);
                 command.Parameters.AddWithValue("@commentparam", comment);
 
-                return await command.ExecuteNonQueryAsync() == 1;          
+                return await command.ExecuteNonQueryAsync();          
             }
         }
 

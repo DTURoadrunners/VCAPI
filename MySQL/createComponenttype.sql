@@ -6,20 +6,21 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `createComponenttype`(
 	IN description varchar(512), 
 	IN userid varchar(32), 
 	IN commentparam varchar(512),
-    OUT err int
+    OUT id int
 )
 BEGIN
 DECLARE EXIT HANDLER FOR SQLEXCEPTION, SQLWARNING
 BEGIN
-SET err = 1;
+SET id = -1;
+RESIGNAL;
 ROLLBACK;
 END;
-SET err = 0;
 START TRANSACTION;
 	INSERT INTO componentType (`name`, categoryID, `storage`, description)
     VALUES (nameparam, categoryId, storageparam, description);
 	SET @newID = LAST_INSERT_ID(); 
     INSERT INTO activeComponentType VALUES (NULL, activeProjectIDParam, @newID);
+    set id = LAST_INSERT_ID();
     INSERT INTO componentTypeLog 
     VALUES (NULL, @newID, LAST_INSERT_ID(), userid, UNIX_TIMESTAMP(NOW()), commentparam, 'created');
 	
