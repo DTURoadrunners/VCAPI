@@ -30,10 +30,6 @@ namespace VCAPI.Repository.MySQL
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@nameparam", name);
                 command.Parameters.AddWithValue("@userid", userId);
-<<<<<<< HEAD
-                
-                return await command.ExecuteNonQueryAsync();
-=======
                 command.Parameters.AddWithValue("@comment", comment);
 
                 DbDataReader reader =  await command.ExecuteReaderAsync();          
@@ -41,7 +37,6 @@ namespace VCAPI.Repository.MySQL
                     return reader.GetInt32(0);
                 else
                     return -1;
->>>>>>> 7b5de53f94fe23db4eebaf3e3900867a9167f27c
             }
         }
 

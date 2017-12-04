@@ -36,7 +36,7 @@ namespace VCAPI.Repository
                 command.Parameters.AddWithValue("@iserror", success);
                 command.Parameters["iserror"].Direction = System.Data.ParameterDirection.Output;
                 await command.ExecuteNonQueryAsync();
-                return success;5
+                return success;
             }
         }
 
