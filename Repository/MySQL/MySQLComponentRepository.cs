@@ -34,8 +34,12 @@ namespace VCAPI.Repository.MySQL
                 command.Parameters.AddWithValue("@comment", component.comment);
                 command.Parameters.AddWithValue("@userID", userid);
                 command.Parameters.AddWithValue("@logComment", comment);
-                return await command.ExecuteNonQueryAsync(); //UNDONE: This always returns -1, how do we return the id of the component?
-                //return (int) await command.ExecuteScalarAsync() //Maybe? This gets the first column of the inserted row
+
+                DbDataReader reader = await command.ExecuteReaderAsync();
+                if (await reader.ReadAsync())
+                    return reader.GetInt32(0);
+                else
+                    return -1;
             }
         }
 
