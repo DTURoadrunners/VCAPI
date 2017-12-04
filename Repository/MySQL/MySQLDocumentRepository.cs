@@ -21,7 +21,7 @@ namespace VCAPI.Repository.MySQL
             connection = conn;
         }
 
-        public async Task<bool> CreateDocument(DocumentInfo info, string userId, string comment, int ID)
+        public async Task<int> CreateDocument(DocumentInfo info, string userId, string comment, int ID)
         {
             using(Connection conn = await connection.Create())
             {
@@ -35,7 +35,7 @@ namespace VCAPI.Repository.MySQL
                 command.Parameters.AddWithValue("@userID", userId);
                 command.Parameters.AddWithValue("@logComment", comment);
 
-                return await command.ExecuteNonQueryAsync() == 1;          
+                return await command.ExecuteNonQueryAsync();          
             }
         }
 

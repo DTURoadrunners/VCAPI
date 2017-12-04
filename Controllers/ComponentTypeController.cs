@@ -8,7 +8,7 @@ using VCAPI.Repository.Models;
 
 namespace VCAPI.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/project/{projectId}/componentType/[controller]")]
     public class ComponentTypeController : Controller
     {
         private readonly IComponentTypeRepository repository;
