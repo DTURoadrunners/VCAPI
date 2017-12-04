@@ -76,7 +76,7 @@ namespace VCAPI.Controllers
                 return Unauthorized();
             }
 
-            if (!await repository.UpdateDocument(model, userId, comment, componentTypeId))
+            if (!await repository.UpdateDocument(model, userId, comment))
             {
                 return new BadRequestObjectResult("Failed to update document: " + model.id);
             }

@@ -21,7 +21,7 @@ namespace VCAPI.Repository.MySQL
             connection = conn;
         }
 
-        public async Task<int> CreateDocument(DocumentInfo info, string userId, string comment, int ID)
+        public async Task<int> CreateDocument(DocumentInfo info, string userId, string comment, int id)
         {
             using(Connection conn = await connection.Create())
             {
@@ -29,7 +29,7 @@ namespace VCAPI.Repository.MySQL
                 command.CommandText = "creatDocument";
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@_filename", info.filename);
-                command.Parameters.AddWithValue("@_activeComponentTypeID", ID);
+                command.Parameters.AddWithValue("@_activeComponentTypeID", id);
                 command.Parameters.AddWithValue("@_bucketpath", info.bucketpath);
                 command.Parameters.AddWithValue("@_description", info.description);
                 command.Parameters.AddWithValue("@userID", userId);
@@ -39,13 +39,13 @@ namespace VCAPI.Repository.MySQL
             }
         }
 
-         public async Task<DocumentInfo> GetDocument(int Id)
+         public async Task<DocumentInfo> GetDocument(int id)
         {
             using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
                 command.CommandText = "getDocument";
                 command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@ID", Id);
+                command.Parameters.AddWithValue("@ID", id);
                 command.Parameters["@ID"].Direction = ParameterDirection.Input;
                 DbDataReader reader = await command.ExecuteReaderAsync();
                 if(!await reader.NextResultAsync()){
@@ -77,13 +77,13 @@ namespace VCAPI.Repository.MySQL
             }
         }
         
-        public async Task<bool> UpdateDocument(DocumentInfo info, string userId, string comment, int ID)
+        public async Task<bool> UpdateDocument(DocumentInfo info, string userId, string comment)
         {
             using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
                 command.CommandText = "updateDocument";
                 command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@activeID", ID);
+                command.Parameters.AddWithValue("@activeID", info.id);
                 command.Parameters.AddWithValue("@filename", info.filename);
                 command.Parameters.AddWithValue("@bucketPath", info.bucketpath);
                 command.Parameters.AddWithValue("@description", info.description);
@@ -93,13 +93,13 @@ namespace VCAPI.Repository.MySQL
                return await command.ExecuteNonQueryAsync() == 1;
             }
         }
-        public async Task<bool> DeleteDocument(int ID, string userId, string comment)
+        public async Task<bool> DeleteDocument(int id, string userId, string comment)
         {
             using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
                 command.CommandText = "deleteDocument";
                 command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@activeID", ID);
+                command.Parameters.AddWithValue("@activeID", id);
                 command.Parameters.AddWithValue("@userID", userId);
                 command.Parameters.AddWithValue("@logComment", comment);
                
@@ -107,13 +107,13 @@ namespace VCAPI.Repository.MySQL
             }
         }
 
-        public async Task<bool> RollbackDocument(int ID, string userId, string comment)
+        public async Task<bool> RollbackDocument(int id, string userId, string comment)
         {
             using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
                 command.CommandText = "rollbackDocument";
                 command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@logID", ID);
+                command.Parameters.AddWithValue("@logID", id);
                 command.Parameters.AddWithValue("@userID", userId);
                 command.Parameters.AddWithValue("@commentParam", comment);
                

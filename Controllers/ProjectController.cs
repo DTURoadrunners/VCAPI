@@ -46,7 +46,7 @@ namespace VCAPI.Controllers
                 return Unauthorized();
             }
             
-            int id = await repository.CreateProject(info.name, User.Identity.Name, comment);
+            int id = await repository.CreateProject(info.name, User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value, comment);
             if(id == -1){
                 return new BadRequestObjectResult("Failed to create project");
             }
@@ -71,12 +71,12 @@ namespace VCAPI.Controllers
         [HttpPut("{projectId}")]
         public async Task<IActionResult> updateProject([FromRoute] int id, [FromBody] ProjectInfo model, [FromBody]string reason)
         {
-            RANK rank = await resourceAccess.GetRankForProject(User.Identity.Name, id);
+            RANK rank = await resourceAccess.GetRankForProject(User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value, id);
             if(rank < RANK.ADMIN){
                 return Unauthorized();
             }
 
-            if(!await repository.UpdateProject(model, id, User.Identity.Name, reason)){
+            if(!await repository.UpdateProject(model, id, User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value, reason)){
                 return BadRequest("Did not change project");
             }
             return Ok();
@@ -86,9 +86,9 @@ namespace VCAPI.Controllers
         [Authorize]
         public async Task<IActionResult> deleteProject([FromRoute] int id, [FromBody] string reason)
         {
-            if(!await resourceAccess.IsSuperAdmin(User.Identity.Name))
+            if(!await resourceAccess.IsSuperAdmin(User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value))
                 return Unauthorized();
-            if(!await repository.DeleteProject(id, User.Identity.Name, reason)){
+            if(!await repository.DeleteProject(id, User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value, reason)){
                 return BadRequest("Project was not deleted");
             }
             return Ok();
