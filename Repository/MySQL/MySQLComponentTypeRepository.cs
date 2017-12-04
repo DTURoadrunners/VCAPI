@@ -21,7 +21,11 @@ namespace VCAPI.Repository.MySQL
             connection = conn;
         }
 
+<<<<<<< HEAD
+        public async Task<int> CreateComponentType(ComponentTypeInfo info, string userId, string comment, int id)
+=======
         public async Task<int> CreateComponentType(ComponentTypeInfo info, int projectId , string userId, string comment)
+>>>>>>> b92f61bfb42939096633cbc10ff5f0f062c63c66
         {
             using(Connection conn = await connection.Create())
             {
