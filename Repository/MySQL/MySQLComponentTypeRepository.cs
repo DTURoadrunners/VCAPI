@@ -21,7 +21,11 @@ namespace VCAPI.Repository.MySQL
             connection = conn;
         }
 
+<<<<<<< HEAD
         public async Task<int> CreateComponentType(ComponentTypeInfo info, string userId, string comment, int id)
+=======
+        public async Task<int> CreateComponentType(ComponentTypeInfo info, int projectId , string userId, string comment)
+>>>>>>> b92f61bfb42939096633cbc10ff5f0f062c63c66
         {
             using(Connection conn = await connection.Create())
             {
@@ -29,7 +33,7 @@ namespace VCAPI.Repository.MySQL
                 command.CommandText = "createComponenttype";
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@nameparam", info.name);
-                command.Parameters.AddWithValue("@activeProjectIDParam", id);
+                command.Parameters.AddWithValue("@activeProjectIDParam", projectId);
                 command.Parameters.AddWithValue("@categoryID", info.categoryID);
                 command.Parameters.AddWithValue("@storageparam", info.storage);
                 command.Parameters.AddWithValue("@description", info.description);
@@ -78,14 +82,14 @@ namespace VCAPI.Repository.MySQL
             }
         }
         
-        public async Task<bool> UpdateComponentType(ComponentTypeInfo info, string userId, string comment, int ID)
+        public async Task<bool> UpdateComponentType(ComponentTypeInfo info, int projectId, string userId, string comment)
         {
             using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
                 command.CommandText = "updateComponenttype";
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@nameparam", info.name);
-                command.Parameters.AddWithValue("@activeID", ID);
+                command.Parameters.AddWithValue("@activeID", projectId);
                 command.Parameters.AddWithValue("@categoryID", info.categoryID);
                 command.Parameters.AddWithValue("@storageparam", info.storage);
                 command.Parameters.AddWithValue("@descriptionparam", info.description);
