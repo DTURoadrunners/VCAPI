@@ -21,7 +21,7 @@ namespace VCAPI.Repository.MySQL
             connection = conn;
         }
 
-        public async Task<int> CreateProject(string userId, string name)
+        public async Task<int> CreateProject(string name, string userId, string comment)
         {
             using(Connection conn = await connection.Create())
             {
@@ -30,7 +30,8 @@ namespace VCAPI.Repository.MySQL
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@nameparam", name);
                 command.Parameters.AddWithValue("@userid", userId);
-                
+                command.Parameters.AddWithValue("@comment", comment);
+
                 DbDataReader reader =  await command.ExecuteReaderAsync();          
                 if(await reader.NextResultAsync())
                     return reader.GetInt32(0);

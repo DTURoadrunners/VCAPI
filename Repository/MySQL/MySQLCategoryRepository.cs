@@ -37,22 +37,6 @@ namespace VCAPI.Repository.MySQL
             }
         }
 
-        public async Task<bool> DeleteCategory(int projectId, int id, string userId, string comment)
-        {
-            using (Connection conn = await connection.Create())
-            {
-                MySqlCommand command = conn.Get().CreateCommand();
-                command.CommandText = "deleteCategory";
-                command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@projectId", projectId);
-                command.Parameters.AddWithValue("@id", id);
-                command.Parameters.AddWithValue("@userid", userId);
-                command.Parameters.AddWithValue("@commentparam", comment);
-
-                return await command.ExecuteNonQueryAsync() == 1;
-            }
-        }
-
         public async Task<List<CategoryInfo>> GetCategories(int projectId)
         {
             using (Connection conn = await connection.Create())
@@ -91,23 +75,6 @@ namespace VCAPI.Repository.MySQL
                 }
 
                 return new CategoryInfo(reader.GetInt32(0), reader.GetString(1));
-            }
-        }
-
-        public async Task<bool> UpdateCategory(int projectId, CategoryInfo model, string userId, string comment)
-        {
-            using (Connection conn = await connection.Create())
-            {
-                MySqlCommand command = conn.Get().CreateCommand();
-                command.CommandText = "updateCategory";
-                command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@projectId", projectId);
-                command.Parameters.AddWithValue("@id", model.id);
-                command.Parameters.AddWithValue("@name", model.name);
-                command.Parameters.AddWithValue("@userid", userId);
-                command.Parameters.AddWithValue("@commentparam", comment);
-
-                return await command.ExecuteNonQueryAsync() == 1;
             }
         }
     }       

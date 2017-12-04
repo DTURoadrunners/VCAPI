@@ -64,39 +64,5 @@ namespace VCAPI.Controllers
             return Created("api/project/" + projectId + "/category", id);
         }
 
-        [Authorize]
-        [HttpPut("{categoryId}")]
-        public async Task<IActionResult> UpdateCategory([FromRoute] int projectId, [FromBody] CategoryInfo model, [FromBody] string userId, [FromBody] string comment)
-        {
-            if (await resourceAccess.GetRankForProject(User.Identity.Name, projectId) < Repository.RANK.STUDENT)
-            {
-                return Unauthorized();
-            }
-
-            if (!await repository.UpdateCategory(projectId, model, userId, comment))
-            {
-                return new BadRequestObjectResult("Failed to update category: " + model.id);
-            }
-
-            return Ok();
-        }
-
-        [Authorize]
-        [HttpPut("{categoryId}")]
-        public async Task<IActionResult> DeleteComponent([FromRoute] int projectId, [FromRoute] int categoryId, [FromBody] string userId, [FromBody] string comment)
-        {
-            if (await resourceAccess.GetRankForProject(User.Identity.Name, projectId) < Repository.RANK.STUDENT)
-            {
-                return Unauthorized();
-            }
-
-            if (!await repository.DeleteCategory(projectId, categoryId, userId, comment))
-            {
-                return new BadRequestObjectResult("Failed to delete category: " + categoryId);
-            }
-
-            return Ok();
-        }
-
     }
 }
