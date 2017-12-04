@@ -32,11 +32,7 @@ namespace VCAPI.Repository.MySQL
                 command.Parameters.AddWithValue("@userid", userId);
                 command.Parameters.AddWithValue("@comment", comment);
 
-                DbDataReader reader =  await command.ExecuteReaderAsync();          
-                if(await reader.ReadAsync())
-                    return reader.GetInt32(0);
-                else
-                    return -1;
+                return await command.ExecuteNonQueryAsync();
             }
         }
 
