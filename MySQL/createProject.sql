@@ -18,4 +18,5 @@ START TRANSACTION;
     INSERT INTO projectLog 
     VALUES (NULL, LAST_INSERT_ID(), @newID, userid, UNIX_TIMESTAMP(NOW()), commentparam, 'created'); 
 
+
 END

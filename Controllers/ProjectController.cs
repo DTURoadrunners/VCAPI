@@ -6,6 +6,8 @@ using VCAPI.Filters;
 using VCAPI.Repository;
 using VCAPI.Repository.Interfaces;
 using VCAPI.Repository.Models;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace VCAPI.Controllers
 {
@@ -22,23 +24,30 @@ namespace VCAPI.Controllers
 
 
         [HttpGet]
-        public IActionResult getAllProjects()
+        public async Task<IActionResult> getAllProjects()
         {
-            return null;
+            List<ProjectInfo> projs = await repository.GetProjects();
+            if (projs != null)
+            {
+                return Ok(projs);
+            }
+            else
+            {
+                return BadRequest("No such project");
+            }
         }
 
         [VerifyModelState]
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> createProject([FromBody] ProjectInfo info)
+        public async Task<IActionResult> createProject([FromBody] ProjectInfo info, [FromBody]string comment)
         {
-            if(!await resourceAccess.IsSuperAdmin(User.Identity.Name)){
+            if(!await resourceAccess.IsSuperAdmin(User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value)){
                 return Unauthorized();
             }
             
-            int id = await repository.CreateProject(info.name, User.Identity.Name);
+            int id = await repository.CreateProject(info.name, User.Identity.Name, comment);
             if(id == -1){
-                // TODO: Return 500
                 return new BadRequestObjectResult("Failed to create project");
             }
             else{
