@@ -1,0 +1,305 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Økobil",
+    "version": "0.0.1"
+  },
+  "paths": {
+    "/admin": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Get all admins."
+          }
+        }
+      },
+      "post": {
+        "responses": {
+          "200": {
+            "description": "Create an admin."
+          }
+        }
+      }
+    },
+    "/admin/{adminID}": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Get information about an admin."
+          }
+        }
+      },
+      "put": {
+        "responses": {
+          "200": {
+            "description": "Update an admins information."
+          }
+        }
+      },
+      "delete": {
+        "responses": {
+          "200": {
+            "description": "delete an admin."
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "adminID",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/projects/": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "create a new project"
+          }
+        }
+      }
+    },
+    "/projects/{projectID}": {
+      "parameters": [
+        {
+          "name": "projectID",
+          "in": "path",
+          "required": true,
+          "type": "integer"
+        }
+      ]
+    },
+    "/users/": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "create a new user"
+          }
+        }
+      }
+    },
+    "/users/{userID}": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Get information about a user."
+          }
+        }
+      },
+      "put": {
+        "responses": {
+          "200": {
+            "description": "Update a user's information."
+          }
+        }
+      },
+      "delete": {
+        "responses": {
+          "200": {
+            "description": "delete a user."
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "userID",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/categories/": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "create a new category"
+          }
+        }
+      }
+    },
+    "/categories/{categoryID}": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Get information about a category."
+          }
+        }
+      },
+      "put": {
+        "responses": {
+          "200": {
+            "description": "Update a category's information."
+          }
+        }
+      },
+      "delete": {
+        "responses": {
+          "200": {
+            "description": "delete a category."
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "categoryID",
+          "in": "path",
+          "required": true,
+          "type": "integer"
+        }
+      ]
+    },
+    "/components/": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "create a new componentType"
+          }
+        }
+      }
+    },
+    "/components/{componentTypeId}": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Get information about a category."
+          }
+        }
+      },
+      "put": {
+        "responses": {
+          "200": {
+            "description": "Update a category's information."
+          }
+        }
+      },
+      "delete": {
+        "responses": {
+          "200": {
+            "description": "delete a category."
+          }
+        }
+      },
+      "post": {
+        "responses": {
+          "200": {
+            "description": "create a new component of component type"
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "componentTypeId",
+          "in": "path",
+          "required": true,
+          "type": "integer"
+        }
+      ]
+    },
+    "/components/{componentTypeId}/{componentId}": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Get information about a component."
+          }
+        }
+      },
+      "put": {
+        "responses": {
+          "200": {
+            "description": "Update a component's information."
+          }
+        }
+      },
+      "delete": {
+        "responses": {
+          "200": {
+            "description": "delete a component."
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "componentTypeId",
+          "in": "path",
+          "required": true,
+          "type": "integer"
+        },
+        {
+          "name": "componentId",
+          "in": "path",
+          "required": true,
+          "type": "integer"
+        }
+      ]
+    },
+    "/components/{componentTypeId}/{componentId}/documents": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "upload a document"
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "componentTypeId",
+          "in": "path",
+          "required": true,
+          "type": "integer"
+        },
+        {
+          "name": "componentId",
+          "in": "path",
+          "required": true,
+          "type": "integer"
+        }
+      ]
+    },
+    "/components/{componentTypeId}/{componentId}/documents/{documentID}": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Get a document"
+          }
+        }
+      },
+      "put": {
+        "responses": {
+          "200": {
+            "description": "Reupload a document"
+          }
+        }
+      },
+      "delete": {
+        "responses": {
+          "200": {
+            "description": "Delete a document"
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "componentTypeId",
+          "in": "path",
+          "required": true,
+          "type": "integer"
+        },
+        {
+          "name": "componentId",
+          "in": "path",
+          "required": true,
+          "type": "integer"
+        },
+        {
+          "name": "documentID",
+          "in": "path",
+          "required": true,
+          "type": "integer"
+        }
+      ]
+    }
+  }
+}
