@@ -74,7 +74,7 @@ namespace VCAPI.Controllers
             string token = Convert.ToBase64String(encoding.GetBytes(String.Format("{0}:{1}", credentials.username, credentials.CASCODE)));
             msg.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", token);
             HttpResponseMessage result = await client.SendAsync(msg);
-            if (result.IsSuccessStatusCode || true)
+            if (result.IsSuccessStatusCode)
             {
                 UserInfo i = new UserInfo{userID = credentials.username, firstname = credentials.firstname, lastname = credentials.lastname, password = Encoding.UTF8.GetBytes(credentials.password)};
                 bool success = await repo.CreateUser(i);
