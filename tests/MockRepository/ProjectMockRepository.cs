@@ -7,15 +7,22 @@ namespace VCAPI.MockRepository
 {
     public class ProjectMockRepository : IProjectRepository
     {
-        List<ProjectInfo> repository = new List<ProjectInfo>();
-        private bool RepositoryContainsEntry(int id)
+        private List<ProjectInfo> repository = new List<ProjectInfo>();
+        public bool RepositoryContainsEntry(int id)
         {
             return id < repository.Count && repository[id] != null;
         }
+
+        public int GetNextInsertId()
+        {
+            return repository.Count;
+        }
+
         public async Task<int> CreateProject(string name, string userId, string comment)
         {
-            int createdIndex = repository.Count;
+            int createdIndex = GetNextInsertId();
             ProjectInfo newProject = new ProjectInfo(createdIndex, name);
+            repository.Add(newProject);
             return createdIndex;
         }
 
@@ -48,9 +55,14 @@ namespace VCAPI.MockRepository
             throw new System.NotImplementedException();
         }
 
-        public Task<bool> UpdateProject(ProjectInfo inf, int id, string userId, string comment)
+        public async Task<bool> UpdateProject(ProjectInfo inf, int id, string userId, string comment)
         {
-            throw new System.NotImplementedException();
+            if(RepositoryContainsEntry(id))
+            {
+                repository[id] = inf;
+                return true;
+            }
+            return false;
         }
     }
 }

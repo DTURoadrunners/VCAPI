@@ -41,7 +41,8 @@ namespace VCAPI.Controllers
         [Authorize]
         [HttpPost]
         public async Task<IActionResult> createProject([FromBody] ProjectInfo info, [FromBody]string comment)
-        {
+        { 
+            
             if(!await resourceAccess.IsSuperAdmin(User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value)){
                 return Unauthorized();
             }
