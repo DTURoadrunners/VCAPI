@@ -5,6 +5,7 @@ using System.Threading;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using tests.MockRepository;
+using tests.TestControllers;
 using VCAPI.Controllers;
 using VCAPI.MockRepository;
 using VCAPI.Repository.Models;
@@ -29,18 +30,6 @@ namespace VCAPI.Repository.ControllerTests
         private async void InitializeRepository()
         {
             existingProjectId = await repository.CreateProject("Dummy project", "Nobody", "Created project");
-        }
-
-        void SetCallersUsername(string name)
-        {
-            controller.ControllerContext = new ControllerContext{
-                HttpContext = new DefaultHttpContext
-                {
-                    User = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]{
-                                new Claim(ClaimTypes.NameIdentifier, name)
-                            }))
-                }
-            };
         }
 
         int GetCreateLocationId(string location)
@@ -82,7 +71,7 @@ namespace VCAPI.Repository.ControllerTests
         {
             string username = "Nobody";
             access.AddSuperadmin(username);
-            SetCallersUsername(username);
+            ControllerTestUtility.SetCallersUsername(username, controller);
 
             ProjectInfo info = new ProjectInfo(0, "TestProject");
             int expectedCreateId = repository.GetNextInsertId();
@@ -102,7 +91,7 @@ namespace VCAPI.Repository.ControllerTests
             const string username = "Nobody";
             const string newProjectName = "UpdatedProject";
             access.AddSuperadmin(username);
-            SetCallersUsername(username);
+            ControllerTestUtility.SetCallersUsername(username, controller);
             ProjectInfo info = new ProjectInfo(0, newProjectName);
             OkResult result = await controller.updateProject(existingProjectId, info, "Typo") as OkResult;
             Assert.NotNull(result);
@@ -118,7 +107,7 @@ namespace VCAPI.Repository.ControllerTests
         {
             string username = "Nobody";
             access.AddSuperadmin(username);
-            SetCallersUsername(username);
+            ControllerTestUtility.SetCallersUsername(username, controller);
 
             OkResult result = await controller.deleteProject(existingProjectId, "Unnecessary project") as OkResult;
             Assert.NotNull(result);

@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using VCAPI.Filters;
 using VCAPI.Repository.Interfaces;
 using VCAPI.Repository.Models;
+using System.Linq;
+using System.Security.Claims;
 
 namespace VCAPI.Controllers
 {
@@ -34,8 +36,8 @@ namespace VCAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetComponents([FromRoute]int componentId){
-            List<ComponentInfo> components = await repository.GetComponents(componentId);
+        public async Task<IActionResult> GetComponents([FromRoute]int projectId){
+            List<ComponentInfo> components = await repository.GetComponents(projectId);
             if (components != null)
             {
                 return Ok(components);
@@ -51,7 +53,7 @@ namespace VCAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateComponent([FromRoute] int projectId, [FromRoute] int componentTypeId, [FromBody] ComponentInfo model, [FromBody] string userId, [FromBody] string comment)
         {
-            if (await resourceAccess.GetRankForProject(User.Identity.Name, projectId) < Repository.RANK.STUDENT)
+            if (await resourceAccess.GetRankForProject(User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value, 0) < Repository.RANK.STUDENT)
             {
                 return Unauthorized();
             }
@@ -68,7 +70,7 @@ namespace VCAPI.Controllers
         [HttpPut("{componentId}")]
         public async Task<IActionResult> UpdateComponent([FromRoute] int projectId, [FromRoute] int componentTypeId, [FromBody] ComponentInfo model, [FromBody] string userId, [FromBody] string comment)
         {
-            if (await resourceAccess.GetRankForProject(User.Identity.Name, projectId) < Repository.RANK.STUDENT)
+            if (await resourceAccess.GetRankForProject(User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value, 0) < Repository.RANK.STUDENT)
             {
                 return Unauthorized();
             }
@@ -85,7 +87,7 @@ namespace VCAPI.Controllers
         [HttpPut("{componentId}")]
         public async Task<IActionResult> DeleteComponent([FromRoute] int projectId, [FromRoute] int componentId, [FromBody] string userId, [FromBody] string comment)
         {
-            if (await resourceAccess.GetRankForProject(User.Identity.Name, projectId) < Repository.RANK.STUDENT)
+            if (await resourceAccess.GetRankForProject(User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value, 0) < Repository.RANK.STUDENT)
             {
                 return Unauthorized();
             }

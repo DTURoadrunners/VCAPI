@@ -1,6 +1,8 @@
+using tests.TestControllers;
+
 namespace VCAPI.Repository.ControllerTests
 {
-    public class UserControllerTest
+    public class UserControllerTest 
     {
         
     }
