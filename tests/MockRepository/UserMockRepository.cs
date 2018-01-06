@@ -7,12 +7,8 @@ namespace tests.MockRepository
 {
     public class UserMockRepository : IUserRepository
     {
-        private List<UserInfo> repository = new List<UserInfo>();
+        private Dictionary<string, UserInfo> repository = new Dictionary<string, UserInfo>();
         
-        public bool RepositoryContainsEntry(int id)
-        {
-            return id < repository.Count && repository[id] != null;
-        }
         public int GetNextInsertId()
         {
             return repository.Count;
@@ -25,24 +21,22 @@ namespace tests.MockRepository
         public async Task<bool> CreateUser(UserInfo info)
         {
             int createdIndex = GetNextInsertId();
-            repository.Add(info);
-            return createdIndex;
+            repository[info.userID] = info;
+            return true;
         }
 
         public async Task<UserInfo> GetUser(string username)
         {  
-           if(RepositoryContainsEntry(username))
-            {
-                return repository[username];
-            }
-            return null;
+            UserInfo info;
+            repository.TryGetValue(username, out info);
+            return info;
         }
 
         public async Task<bool> UpdateUser(UserInfo user)
         {
-           if(RepositoryContainsEntry(userID))
+            if(await GetUser(user.userID) != null)
             {
-                repository[userID] = user;
+                repository[user.userID] = user;
                 return true;
             }
             return false;
