@@ -18,7 +18,6 @@ USE DTU_Roadrunners;
     SET FOREIGN_KEY_CHECKS = 1;
 # END DROP EVERYTHING
 
-
 CREATE TABLE `user` (
    userID       VARCHAR(32) NOT NULL,
    firstname    VARCHAR(32) NOT NULL, 
@@ -34,129 +33,138 @@ CREATE TABLE `role` (
     PRIMARY KEY (roleID)
 ); 
 
-CREATE TABLE `project`(
-    projectID   INT NOT NULL AUTO_INCREMENT,
-    `name`      VARCHAR(64) NOT NULL UNIQUE,
-    PRIMARY KEY (projectID)
-);
-
-CREATE TABLE `project_relationship` (
-    userID      VARCHAR(32) NOT NULL,
-    roleID      INT NOT NULL,
-    projectID   INT NOT NULL,
-    FOREIGN KEY (userID) REFERENCES `user`(userID),
-    FOREIGN KEY (roleID) REFERENCES `role`(roleID),
-    FOREIGN KEY (projectID) REFERENCES `project`(projectID)
-);
-
-CREATE TABLE `category`(
+CREATE TABLE `categories`(
     categoryID  INT NOT NULL AUTO_INCREMENT,
     `name`      VARCHAR(64) NOT NULL UNIQUE,
     PRIMARY KEY (categoryID)
 );
 
+CREATE TABLE `projectJournal`(
+    projectID   INT NOT NULL AUTO_INCREMENT,
+    `name`      VARCHAR(64) NOT NULL UNIQUE,
+    PRIMARY KEY (projectID)
+);
 
-CREATE TABLE `componentType`(
+
+CREATE TABLE `projectStaticIds` (
+    ID          INT NOT NULL AUTO_INCREMENT,
+    activeProjectId   INT, 
+    PRIMARY KEY (ID),
+    FOREIGN KEY (activeProjectId) REFERENCES `projectJournal`(projectID)
+);
+
+CREATE TABLE `projectLog` (
+    revisionNumber          INT NOT NULL AUTO_INCREMENT,
+    projectId	 	        INT NOT NULL,
+    affectedJournalEntry    INT,
+    userID                  VARCHAR(32) NOT NULL,
+    `timestamp`             INT NOT NULL,
+    `comment`               VARCHAR(512) NOT NULL,
+    `type`                  ENUM('created', 'deleted', 'updated', 'rollback'),
+    PRIMARY KEY (revisionNumber),
+    FOREIGN KEY (affectedJournalEntry) REFERENCES `projectJournal`(projectID),
+	FOREIGN KEY (projectId) REFERENCES `projectStaticIds`(ID),
+    FOREIGN KEY (userID) REFERENCES `user`(userID)
+);
+
+CREATE TABLE `projectRoles` (
+    userID      VARCHAR(32) NOT NULL,
+    roleID      INT NOT NULL,
+    projectID   INT NOT NULL,
+    FOREIGN KEY (userID) REFERENCES `user`(userID),
+    FOREIGN KEY (roleID) REFERENCES `role`(roleID),
+    FOREIGN KEY (projectID) REFERENCES `projectStaticIds`(ID)
+);
+
+CREATE view `project` AS SELECT `projectStaticIds`.`ID`, `name` 
+FROM `projectStaticIds` join `projectJournal` ON `projectStaticIds`.`ID` = `projectJournal`.`projectID`;
+
+CREATE TABLE `componentTypeJournal`(
     componentTypeID INT NOT NULL AUTO_INCREMENT,
     `name`          VARCHAR(64) NOT NULL UNIQUE,
     categoryID      INT NOT NULL,
     `storage`       INT NOT NULL,
     `description`   VARCHAR(512) NOT NULL,
     PRIMARY KEY (componentTypeID),
-    FOREIGN KEY (categoryID) REFERENCES `category`(categoryID)
+    FOREIGN KEY (categoryID) REFERENCES `categories`(categoryID)
 );
 
-CREATE TABLE `component` (
-    componentID         INT NOT NULL AUTO_INCREMENT,
-    `status`            VARCHAR(64) NOT NULL,
-    `comment`           VARCHAR(512) NOT NULL,
-    PRIMARY KEY (componentID)
-);
-
-CREATE TABLE `document`(
-    documentID              INT NOT NULL AUTO_INCREMENT,
-    filename                VARCHAR(64) NOT NULL,
-    bucketpath              VARCHAR(1024) NOT NULL,
-    description             VARCHAR(512) NOT NULL,
-    PRIMARY KEY (documentID)
-    
-);
-
-
-CREATE TABLE activeProjects (
-    ID          INT NOT NULL AUTO_INCREMENT,
-    projectID   INT, 
-    PRIMARY KEY (ID),
-    FOREIGN KEY (projectID) REFERENCES `project`(projectID)
-);
-
-CREATE TABLE `projectLog` (
-    projectLogID        INT NOT NULL AUTO_INCREMENT,
-    activeProjectID	 	INT NOT NULL,
-    projectID           INT,
-    userID              VARCHAR(32) NOT NULL,
-    `timestamp`         INT NOT NULL,
-    `comment`           VARCHAR(512) NOT NULL,
-    `type`              ENUM('created', 'deleted', 'updated', 'rollback'),
-    PRIMARY KEY (projectLogID),
-    FOREIGN KEY (projectID) REFERENCES `project`(projectID),
-	FOREIGN KEY (activeProjectID) REFERENCES `activeProjects`(ID),
-    FOREIGN KEY (userID) REFERENCES `user`(userID)
-);
-
-CREATE TABLE activeComponentType (
+CREATE TABLE `componentTypeStaticId` (
     ID                  INT NOT NULL AUTO_INCREMENT,
-    activeProjectID     INT NOT NULL,
-    componentTypeID     INT,
+    activeComponentID   INT,
+    associatedProject   INT NOT NULL,   
     PRIMARY KEY (ID),
-    FOREIGN KEY (componentTypeID) REFERENCES `componentType`(componentTypeID),
-    FOREIGN KEY (activeProjectID) REFERENCES `activeProjects`(ID)
+    FOREIGN KEY (associatedProject) REFERENCES `projectStaticIds`(ID),
+    FOREIGN KEY (activeComponentID) REFERENCES `componentTypeJournal`(componentTypeID)
 );
 
 CREATE TABLE `componentTypeLog` (
-    componentTypeLogID      INT NOT NULL AUTO_INCREMENT,
+    revision                INT NOT NULL AUTO_INCREMENT,
     componentTypeID         INT,
-    activeComponentTypeID   INT NOT NULL,
+    affectedJournalEntry    INT NOT NULL,
     userID                  VARCHAR(32) NOT NULL,
     `timestamp`             INT NOT NULL,
     `comment`               VARCHAR(512) NOT NULL,
     `type`                  ENUM('created', 'deleted', 'updated', 'rollback'),
-    PRIMARY KEY (componentTypeLogID),
-    FOREIGN KEY (activeComponentTypeID) REFERENCES `activeComponentType`(ID),
-    FOREIGN KEY (componentTypeID) REFERENCES `componentType`(componentTypeID),
+    PRIMARY KEY (revision),
+    FOREIGN KEY (componentTypeID) REFERENCES `componentTypeStaticId`(ID),
+    FOREIGN KEY (affectedJournalEntry) REFERENCES `componentTypeJournal`(componentTypeID),
     FOREIGN KEY (userID) REFERENCES `user`(userID)
 );
 
-CREATE TABLE activeComponent (
+CREATE view `componentTypes` AS SELECT `ID`, `name`, `categoryID`, `storage`, `description` 
+FROM `componentTypeStaticId` join `componentTypeJournal` ON `componentTypeStaticId`.`ID` = `componentTypeJournal`.`componentTypeID`;
+
+CREATE TABLE `componentJournal` (
+    componentID         INT NOT NULL AUTO_INCREMENT,
+    typeID              INT NOT NULL,
+    `status`            VARCHAR(64) NOT NULL,
+    `comment`           VARCHAR(512) NOT NULL,
+    PRIMARY KEY (componentID),
+    FOREIGN KEY (typeID) REFERENCES `componentTypeStaticId`(ID)
+);
+
+CREATE TABLE `componentStaticId` (
     ID                  INT NOT NULL AUTO_INCREMENT,
-    componentID         INT,
-    activeComponentTypeID     INT NOT NULL,
+    activeComponentId   INT,
+    componentTypeId     INT NOT NULL,
     PRIMARY KEY (ID),
-    FOREIGN KEY (componentID) REFERENCES `component`(componentID),
-    FOREIGN KEY (activeComponentTypeID) REFERENCES `activeComponentType`(ID)
+    FOREIGN KEY (componentTypeId) REFERENCES `componentTypeStaticId`(ID),
+    FOREIGN KEY (activeComponentId) REFERENCES `componentJournal`(componentID)
 );
 
 CREATE TABLE `componentLog` (
     componentLogID          INT NOT NULL AUTO_INCREMENT,
-    componentID             INT,
-    activeComponentID      INT NOT NULL,
+    affectedJournalEntry    INT,
+    activeComponentID      	INT NOT NULL,
     userID                  VARCHAR(32) NOT NULL,
     `timestamp`             INT NOT NULL,
     `comment`               VARCHAR(512) NOT NULL,
     `type`                  ENUM('created', 'deleted', 'updated',  'rollback'),
     PRIMARY KEY (componentLogID),
-    FOREIGN KEY (componentID) REFERENCES `component`(componentID),
-    FOREIGN KEY (activeComponentID) REFERENCES `activeComponent`(ID),
+    FOREIGN KEY (affectedJournalEntry) REFERENCES `componentJournal`(componentID),
+    FOREIGN KEY (activeComponentID) REFERENCES `componentStaticId`(ID),
     FOREIGN KEY (userID) REFERENCES `user`(userID)
 );
 
-CREATE TABLE activeDocument (
+CREATE view `components` AS SELECT 'ID', `typeID`, `status`, `comment` 
+FROM `componentStaticId` join `componentJournal` ON `componentStaticId`.`ID` = `componentJournal`.`componentTypeID`;
+
+CREATE TABLE `documentJournal`(
+    documentID              INT NOT NULL AUTO_INCREMENT,
+    bucketpath              VARCHAR(1024) NOT NULL,
+    filename                VARCHAR(64) NOT NULL,
+    description             VARCHAR(512) NOT NULL,
+    PRIMARY KEY (documentID) 
+);
+
+CREATE TABLE documentStaticId (
     ID                  INT NOT NULL AUTO_INCREMENT,
-    documentID          INT,
-    activeComponentTypeID     INT NOT NULL,
+    activeDocumentID          INT,
+    associatedComponentTypeID    INT NOT NULL,
     PRIMARY KEY (ID),
-    FOREIGN KEY (documentID) REFERENCES `document`(documentID),
-    FOREIGN KEY (activeComponentTypeID) REFERENCES `activeComponentType`(ID)
+    FOREIGN KEY (activeDocumentID) REFERENCES `documentJournal`(documentID),
+    FOREIGN KEY (associatedComponentTypeID) REFERENCES `componentTypeStaticId`(ID)
 );
 
 CREATE TABLE `documentLog` (
@@ -168,22 +176,13 @@ CREATE TABLE `documentLog` (
     `comment`           VARCHAR(512) NOT NULL,
     `type`              ENUM('created', 'deleted', 'updated', 'rollback'),
     PRIMARY KEY (documentLogID),
-    FOREIGN KEY (activeDocumentID) REFERENCES `activeDocument`(ID),
-	FOREIGN KEY (documentID) REFERENCES `document`(documentID),
+    FOREIGN KEY (activeDocumentID) REFERENCES `documentStaticId`(ID),
+	FOREIGN KEY (documentID) REFERENCES `documentJournal`(documentID),
     FOREIGN KEY (userID) REFERENCES `user`(userID)
 );
 
-
-CREATE TABLE friendshipComponent (
-    ID          INT NOT NULL AUTO_INCREMENT,
-    friendLeft  INT NOT NULL, 
-    friendRight INT NOT NULL, 
-    projectID   INT NOT NULL,   
-    PRIMARY KEY (ID),
-    FOREIGN KEY (friendLeft) REFERENCES `activeComponent`(ID),
-    FOREIGN KEY (friendRight) REFERENCES `activeComponent`(ID),
-    FOREIGN KEY (projectID) REFERENCES `project`(projectID)
-);
+CREATE view `documents` AS SELECT 'ID', `bucketpath`, `filename`, `description` 
+FROM `documentStaticId` join `documentJournal` ON `documentStaticId`.`ID` = `documentJournal`.`documentID`;
 
 insert into role VALUES(NULL, 'PROHIBITED');
 insert into role VALUES(NULL, 'GUEST');
