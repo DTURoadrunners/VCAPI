@@ -1,0 +1,9 @@
+{
+    "TokenSettings": {
+      "secretKey" : "db3OIsj+BXE9NZDy0t8W3TcNekrF+2d/1sFnWG4HnV8TZY30iTOdtVWJG8abWvB1GlOgJuQZdcF2Luqm/hccMw==",
+      "audience" : "roadrunner-api"  
+    },
+    "ConnectionStrings": {
+        "Connection": "host=178.62.5.59;port=3306;user id=vcapi;password=vcapiaccess;database=DTU_Roadrunners;"
+      }
+  }
