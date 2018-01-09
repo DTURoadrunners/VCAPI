@@ -3,19 +3,14 @@ using System.Threading.Tasks;
 using MySql.Data.MySqlClient;
 using VCAPI.Repository.MySQL;
 using static VCAPI.Repository.MySQL.DatabaseConnector;
+using VCAPI.Repository.Interfaces;
+using System.Data;
 
-namespace VCAPI.Repository
+namespace VCAPI.Repository.MySQL
 {
     // Should match the role table in MySQL
-    public enum RANK
-    {
-        PROHIBITED = 1,
-        GUEST = 2,
-        STUDENT = 3,
-        ADMIN = 4,
-        SUPERADMIN = 5
-    }
-    public class MySQLResourceAccess : Interfaces.IResourceAccess
+   
+    public class MySQLResourceAccess : IResourceAccess
     {
         readonly DatabaseConnector connector;
         public MySQLResourceAccess(DatabaseConnector conn)
@@ -64,16 +59,13 @@ namespace VCAPI.Repository
            using(Connection conn = await connector.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
                 command.CommandText = "getUserRole";
+                command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@userID", username);
                 command.Parameters.AddWithValue("@projectID", -1);
-                DbDataReader reader = await command.ExecuteReaderAsync();
-                if(!await reader.NextResultAsync()){
-                    return false;
-                }
-                else{
-                    int rank = reader.GetInt32(0);
-                    return (RANK)rank == RANK.SUPERADMIN;
-                }
+                command.Parameters.AddWithValue("@userRole", MySqlDbType.Int32).Direction = ParameterDirection.Output;
+                await command.ExecuteNonQueryAsync();
+                int rank = (int)command.Parameters["@userRole"].Value;
+                return (RANK)rank == RANK.SUPERADMIN;
             }
         }
     }

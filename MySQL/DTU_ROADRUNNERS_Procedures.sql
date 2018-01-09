@@ -19,7 +19,6 @@ DROP PROCEDURE IF EXISTS createComponent$$
 CREATE PROCEDURE `createComponent`(
 	IN componentTypeId INT,
     IN _status VARCHAR(64),
-	IN _type int,
 	IN _comment VARCHAR(512),
     IN userID VARCHAR(32),
     IN logComment VARCHAR(512),
@@ -32,11 +31,11 @@ BEGIN
     END;
 
 	START TRANSACTION;
-		INSERT INTO componentJournal VALUES(NULL, _type ,_status, _comment);
+		INSERT INTO componentJournal VALUES(NULL, componentTypeID ,_status, _comment);
 		SET @journalEntry = LAST_INSERT_ID();
-        INSERT INTO componentStaticId VALUES(NULL, @journalEntry, componentTypeId);
+        INSERT INTO componentStaticId VALUES(NULL, @journalEntry);
         SET id = LAST_INSERT_ID();
-		INSERT INTO componentLog VALUES(NULL, @journalEntry, LAST_INSERT_ID(), userID, UNIX_TIMESTAMP(NOW()), logComment, "created");
+		INSERT INTO componentLog VALUES(NULL, @journalEntry, id, userID, UNIX_TIMESTAMP(NOW()), logComment, "created");
 	COMMIT;
 END$$
 
@@ -63,10 +62,10 @@ BEGIN
 		INSERT INTO componentTypeJournal (`name`, categoryID, `storage`, description)
 		VALUES (nameparam, categoryId, `storageparam`, description);
 		SET @journalEntry = LAST_INSERT_ID(); 
-		INSERT INTO componentTypeStaticId VALUES (NULL, activeProjectIDParam, @journalEntry);
+		INSERT INTO componentTypeStaticId VALUES (NULL, @journalEntry, activeProjectIDParam);
 		set id = LAST_INSERT_ID();
 		INSERT INTO componentTypeLog 
-		VALUES (NULL, @journalEntry, id, userid, UNIX_TIMESTAMP(NOW()), commentparam, 'created');
+		VALUES (NULL, id, @journalEntry, userid, UNIX_TIMESTAMP(NOW()), commentparam, 'created');
 	COMMIT;
 END$$
 
@@ -123,36 +122,11 @@ BEGIN
     COMMIT;
 END$$
 
--- Create new role
-DROP PROCEDURE IF EXISTS createRole$$
-CREATE PROCEDURE `createRole`(IN nameParam VARCHAR(32))
-BEGIN
-	INSERT INTO role (rolename)
-	Values (LOWER(nameParam));    
-END$$
-
 -- Create new user
-DROP PROCEDURE IF EXISTS createProject$$
-CREATE PROCEDURE `createProject`(IN nameparam VARCHAR(64), IN userid VARCHAR(32), IN commentparam VARCHAR(512), OUT id INT)
+DROP PROCEDURE IF EXISTS createUser$$
+CREATE PROCEDURE `createUser`(in ID varchar(32), in firstnameparam VARCHAR(32), in lastnameparam varchar(32), IN phonenumberparam INT, IN passwordparam VARCHAR(1024))
 BEGIN 
-	DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-		ROLLBACK;
-        RESIGNAL;
-    END;
-
-	START TRANSACTION;
-	INSERT INTO projectJournal (name)
-	VALUES (LOWER(nameparam));
-    
-    SET @newID = LAST_INSERT_ID();
-    
-    INSERT INTO projectStaticIds (activeProjectId)
-	VALUES (@newID);
-	SET id = LAST_INSERT_ID();
-    INSERT INTO projectLog 
-    VALUES (NULL, id, @newID, userid, UNIX_TIMESTAMP(NOW()), commentparam, 'created'); 
-    COMMIT;
+	insert into user values(ID, firstnameparam, lastnameparam, phonenumberparam, passwordparam, 0);
 END$$
 
 
@@ -412,17 +386,15 @@ BEGIN
 UPDATE user SET firstname = firstnameparam, lastname = lastnameparam, phonenumber = phonenumberparam WHERE user.userID = userID;
 END$$
 
-DROP FUNCTION getUserRole$$
-CREATE FUNCTION `getUserRole`(userID VARCHAR(128), projectID INT)
-RETURNS INT
+DROP PROCEDURE getUserRole$$
+CREATE PROCEDURE `getUserRole`(userID VARCHAR(128), projectID INT, out userRole INT)
 BEGIN
 	DECLARE SuperAdmin INT DEFAULT -1;
-	DECLARE userRole int DEFAULT -1;
+    SET userRole = -1;
 	SELECT `superuser` INTO SuperAdmin FROM `user` where `user`.`userID` = userID;
 	IF SuperAdmin = 1 THEN
 		SELECT roleID INTO userRole from `role` where role.rolename = 'SUPERADMIN';
 	ELSE
 		SELECT roleID INTO userRole from `projectRoles` where `projectRoles`.`userID` = userID AND `projectRoles`.`projectID` = projectID;
 	END IF; 
-	return userRole;
 END$$

@@ -30,9 +30,10 @@ namespace VCAPI.Repository.MySQL
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@nameparam", name);
                 command.Parameters.AddWithValue("@userid", userId);
-                command.Parameters.AddWithValue("@comment", comment);
-
-                return await command.ExecuteNonQueryAsync();
+                command.Parameters.AddWithValue("@commentparam", comment);
+                command.Parameters.AddWithValue("@id", MySqlDbType.Int32).Direction = ParameterDirection.Output;
+                await command.ExecuteNonQueryAsync();
+                return (int)command.Parameters["@id"].Value;
             }
         }
 

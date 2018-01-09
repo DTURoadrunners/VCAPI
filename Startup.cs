@@ -29,9 +29,19 @@ namespace VCAPI
             services.AddMvc();
             services.AddOptions();
             services.AddSingleton<DatabaseConnector>(new DatabaseConnector(Configuration["ConnectionStrings:Connection"]));
+            
+#region Database injections
             services.AddTransient<IUserRepository, MySQLUserRepository>();
-            services.Configure<JWTOptions>(Configuration.GetSection("TokenSettings"));
+            services.AddTransient<IProjectRepository, MySQLProjectRepository>();
+            services.AddTransient<IResourceAccess, MySQLResourceAccess>();
+            services.AddTransient<ICategoryRepository, MySQLCategoryRepository>();
+            services.AddTransient<IDocumentRepository, MySQLDocumentRepository>();
+            services.AddTransient<IComponentRepository, MySQLComponentRepository>();
+            services.AddTransient<IComponentTypeRepository, MySQLComponentTypeRepository>();
 
+            services.Configure<JWTOptions>(Configuration.GetSection("TokenSettings"));
+#endregion        
+    
 #region JWT
 
             JWTOptions jwt = Configuration.GetSection("TokenSettings").Get<JWTOptions>();

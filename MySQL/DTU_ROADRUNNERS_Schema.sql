@@ -24,7 +24,7 @@ CREATE TABLE `user` (
    lastname     VARCHAR(32) NOT NULL,
    phonenumber  INT NOT NULL,
    password 	VARCHAR(1024) NOT NULL,
-   superuser    boolean NOT NULL DEFAULT(false), 
+   superuser    boolean NOT NULL DEFAULT false, 
    PRIMARY KEY (userID)
 );
 
@@ -77,6 +77,7 @@ CREATE TABLE `projectRoles` (
     FOREIGN KEY (projectID) REFERENCES `projectStaticIds`(ID)
 );
 
+DROP VIEW IF EXISTS `project`;
 CREATE view `project` AS SELECT `projectStaticIds`.`ID`, `name` 
 FROM `projectStaticIds` join `projectJournal` ON `projectStaticIds`.`ID` = `projectJournal`.`projectID`;
 
@@ -113,6 +114,7 @@ CREATE TABLE `componentTypeLog` (
     FOREIGN KEY (userID) REFERENCES `user`(userID)
 );
 
+DROP VIEW IF EXISTS `componentTypes`;
 CREATE view `componentTypes` AS SELECT `ID`, `name`, `categoryID`, `storage`, `description` 
 FROM `componentTypeStaticId` join `componentTypeJournal` ON `componentTypeStaticId`.`ID` = `componentTypeJournal`.`componentTypeID`;
 
@@ -128,9 +130,7 @@ CREATE TABLE `componentJournal` (
 CREATE TABLE `componentStaticId` (
     ID                  INT NOT NULL AUTO_INCREMENT,
     activeComponentId   INT,
-    componentTypeId     INT NOT NULL,
     PRIMARY KEY (ID),
-    FOREIGN KEY (componentTypeId) REFERENCES `componentTypeStaticId`(ID),
     FOREIGN KEY (activeComponentId) REFERENCES `componentJournal`(componentID)
 );
 
@@ -147,9 +147,9 @@ CREATE TABLE `componentLog` (
     FOREIGN KEY (activeComponentID) REFERENCES `componentStaticId`(ID),
     FOREIGN KEY (userID) REFERENCES `user`(userID)
 );
-
+DROP VIEW IF EXISTS `components`;
 CREATE view `components` AS SELECT 'ID', `typeID`, `status`, `comment` 
-FROM `componentStaticId` join `componentJournal` ON `componentStaticId`.`ID` = `componentJournal`.`componentTypeID`;
+FROM `componentStaticId` join `componentJournal` ON `componentStaticId`.`ID` = componentJournal.componentID;
 
 CREATE TABLE `documentJournal`(
     documentID              INT NOT NULL AUTO_INCREMENT,
@@ -182,6 +182,7 @@ CREATE TABLE `documentLog` (
     FOREIGN KEY (userID) REFERENCES `user`(userID)
 );
 
+DROP VIEW IF EXISTS `documents`;
 CREATE view `documents` AS SELECT 'ID', `bucketpath`, `filename`, `description` 
 FROM `documentStaticId` join `documentJournal` ON `documentStaticId`.`ID` = `documentJournal`.`documentID`;
 

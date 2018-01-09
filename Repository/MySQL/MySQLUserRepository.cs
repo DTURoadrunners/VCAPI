@@ -83,6 +83,7 @@ namespace VCAPI.Repository.MySQL
 
                 string pass = Convert.ToBase64String(hash);
                 command.Parameters.AddWithValue("@passwordparam", pass);
+                command.Parameters.AddWithValue("@superuser", false);
                 try{
                     await command.ExecuteNonQueryAsync();
                     return true;
