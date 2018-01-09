@@ -37,17 +37,23 @@ namespace VCAPI.Controllers
             }
         }
 
+        public struct CreateProjectMarshall
+        {
+            public ProjectInfo info;
+            public string comment;
+        }
+
         [VerifyModelState]
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> createProject([FromBody] ProjectInfo info, [FromBody]string comment)
+        public async Task<IActionResult> createProject([FromBody] CreateProjectMarshall request)
         { 
             
             if(!await resourceAccess.IsSuperAdmin(User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value)){
                 return Unauthorized();
             }
             
-            int id = await repository.CreateProject(info.name, User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value, comment);
+            int id = await repository.CreateProject(request.info.name, User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value, request.comment);
             if(id == -1){
                 return new BadRequestObjectResult("Failed to create project");
             }
