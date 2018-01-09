@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using VCAPI.Filters;
 using VCAPI.Repository.Interfaces;
 using VCAPI.Repository.Models;
+using VCAPI.Repository;
 
 namespace VCAPI.Controllers
 {

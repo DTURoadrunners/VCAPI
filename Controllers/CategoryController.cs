@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using VCAPI.Filters;
 using VCAPI.Repository.Interfaces;
+using VCAPI.Repository;
 using VCAPI.Repository.Models;
 
 namespace VCAPI.Controllers

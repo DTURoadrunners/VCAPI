@@ -7,6 +7,7 @@ using VCAPI.Repository.Interfaces;
 using VCAPI.Repository.Models;
 using System.Linq;
 using System.Security.Claims;
+using VCAPI.Repository;
 
 namespace VCAPI.Controllers
 {
