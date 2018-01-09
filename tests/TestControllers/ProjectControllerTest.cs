@@ -75,8 +75,10 @@ namespace VCAPI.Repository.ControllerTests
 
             ProjectInfo info = new ProjectInfo(0, "TestProject");
             int expectedCreateId = repository.GetNextInsertId();
-            
-            CreatedResult result = await controller.createProject(info, "Initialize create") as CreatedResult;
+            ProjectController.CreateProjectMarshall marshall;
+            marshall.info = info;
+            marshall.comment = "Initialize create";
+            CreatedResult result = await controller.createProject(marshall) as CreatedResult;
             Assert.NotNull(result);
             Assert.Equal((int)HttpStatusCode.Created, result.StatusCode);
             int? createdId = result.Value as int?;
