@@ -25,6 +25,12 @@ CREATE PROCEDURE `createComponent`(
     IN logComment VARCHAR(512),
     OUT id int)
 BEGIN
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+		ROLLBACK;
+        RESIGNAL;
+    END;
+
 	START TRANSACTION;
 		INSERT INTO componentJournal VALUES(NULL, _type ,_status, _comment);
 		SET @journalEntry = LAST_INSERT_ID();
@@ -47,6 +53,12 @@ CREATE PROCEDURE `createComponentType`(
     OUT id int
 )
 BEGIN
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+		ROLLBACK;
+        RESIGNAL;
+    END;
+
 	START TRANSACTION;
 		INSERT INTO componentTypeJournal (`name`, categoryID, `storage`, description)
 		VALUES (nameparam, categoryId, `storageparam`, description);
@@ -71,12 +83,19 @@ CREATE PROCEDURE `createDocument`(
 	OUT id INT
 )
 BEGIN  
-START TRANSACTION;
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+		ROLLBACK;
+        RESIGNAL;
+    END;
+
+	START TRANSACTION;
 	INSERT INTO documentJournal VALUES (NULL, _bucketpath, _filename, _description);
 	SET @newID = LAST_INSERT_ID();
 	INSERT INTO documentStaticId VALUES(NULL, @newID, _activeComponentTypeID);
     set id = LAST_INSERT_ID();
 	INSERT INTO documentLog VALUES(NULL, @newID, id, userID, UNIX_TIMESTAMP(NOW()), logComment, "created");
+	COMMIT;
 END$$
 
 -- Create new project
@@ -84,17 +103,24 @@ END$$
 DROP PROCEDURE IF EXISTS createProject$$
 CREATE PROCEDURE `createProject`(IN nameparam VARCHAR(64), IN userid VARCHAR(32), IN commentparam VARCHAR(512), OUT id INT)
 BEGIN 
-START TRANSACTION;
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+		ROLLBACK;
+        RESIGNAL;
+    END;
+
+	START TRANSACTION;
 	INSERT INTO projectJournal (name)
 	VALUES (LOWER(nameparam));
     
     SET @newID = LAST_INSERT_ID();
     
-    INSERT INTO projectStaticIds (projectID)
+    INSERT INTO projectStaticIds (activeProjectId)
 	VALUES (@newID);
 	SET id = LAST_INSERT_ID();
     INSERT INTO projectLog 
     VALUES (NULL, id, @newID, userid, UNIX_TIMESTAMP(NOW()), commentparam, 'created'); 
+    COMMIT;
 END$$
 
 -- Create new role
@@ -106,12 +132,26 @@ BEGIN
 END$$
 
 -- Create new user
+DROP PROCEDURE IF EXISTS createProject$$
+CREATE PROCEDURE `createProject`(IN nameparam VARCHAR(64), IN userid VARCHAR(32), IN commentparam VARCHAR(512), OUT id INT)
+BEGIN 
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+		ROLLBACK;
+        RESIGNAL;
+    END;
 
-DROP PROCEDURE IF EXISTS `createUser`$$
-CREATE PROCEDURE `createUser`(in ID varchar(32), in firstnameparam VARCHAR(32), in lastnameparam varchar(32), IN phonenumberparam INT, IN passwordparam VARCHAR(1024))
-BEGIN
 	START TRANSACTION;
-		insert into user values(ID, firstnameparam, lastnameparam, phonenumberparam, passwordparam, 0);
+	INSERT INTO projectJournal (name)
+	VALUES (LOWER(nameparam));
+    
+    SET @newID = LAST_INSERT_ID();
+    
+    INSERT INTO projectStaticIds (activeProjectId)
+	VALUES (@newID);
+	SET id = LAST_INSERT_ID();
+    INSERT INTO projectLog 
+    VALUES (NULL, id, @newID, userid, UNIX_TIMESTAMP(NOW()), commentparam, 'created'); 
     COMMIT;
 END$$
 
@@ -123,6 +163,12 @@ CREATE PROCEDURE `deleteComponent`(
     IN userID VARCHAR(32),
     IN logComment VARCHAR(512))
 BEGIN
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+		ROLLBACK;
+        RESIGNAL;
+    END;
+
 	START TRANSACTION;
 		SELECT activeComponentId into @oldID from componentStaticId where componentStaticId.ID = ID;
         update componentStaticId set activeComponentId = NULL WHERE componentJournal.ID = ID;
@@ -137,6 +183,12 @@ CREATE PROCEDURE `deleteComponenttype`(
     IN userid VARCHAR(32), 
     IN commentparam VARCHAR(512))
 BEGIN
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+		ROLLBACK;
+        RESIGNAL;
+    END;
+
 	START TRANSACTION;
         Select activeComponentID into @oldComponentTypeID from componentTypeStaticId where componentTypeStaticId.ID = componentTypeId;
         update componentTypeStaticId set activeComponentID = null where componentTypeStaticId.ID = componentTypeId;
@@ -151,6 +203,12 @@ CREATE PROCEDURE `deleteDocument`(
     IN userID VARCHAR(32),
     IN logComment VARCHAR(512))
 BEGIN
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+		ROLLBACK;
+        RESIGNAL;
+    END;
+
 	START TRANSACTION;
 		Select activeDocumentID into @oldDocumentID from documentStaticId where ID = documentId;
 		update documentStaticId set docactiveDocumentIDumentID = null where ID = documentId;
@@ -162,6 +220,12 @@ END$$
 DROP PROCEDURE IF EXISTS deleteProject$$
 CREATE PROCEDURE `deleteProject`(IN projectId INT(11), IN userid VARCHAR(32), IN commentParam VARCHAR(512))
 BEGIN 
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+		ROLLBACK;
+        RESIGNAL;
+    END;
+
 	START TRANSACTION;
         Select projectID into @oldProjectID from projectStaticIds where ID = projectId;
 		update projectStaticIds set activeProjectId = null where ID=projectId;
@@ -172,6 +236,12 @@ END$$
 DROP PROCEDURE IF EXISTS rollbackComponent$$
 CREATE PROCEDURE `rollbackComponent`(IN revisionID INT, in userID int, in commentParam VARCHAR(512))
 BEGIN
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+		ROLLBACK;
+        RESIGNAL;
+    END;
+
 	START TRANSACTION;
 		select activeComponentID into @staticId from componentLog where componentLogID = revisionID;
 		select activeComponentId into @oldComponentID from componentStaticId where ID = @activeID;
@@ -186,6 +256,12 @@ END$$
 DROP PROCEDURE rollbackComponentType$$
 CREATE PROCEDURE `rollbackComponentType`(in revisionId int, in userID int, in commentParam VARCHAR(512))
 BEGIN
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+		ROLLBACK;
+        RESIGNAL;
+    END;
+
 	START TRANSACTION;
 		select componentTypeID into @staticId from componentTypeLog where revision = revisionId;
 		select activeComponentID into @oldComponentTypeID from componentTypeStaticId where ID = @staticId;
@@ -201,29 +277,43 @@ END$$
 DROP PROCEDURE rollbackDocument$$
 CREATE PROCEDURE `rollbackDocument`(in logID int, in userID int, in commentParam VARCHAR(512), out err int)
 BEGIN
-START TRANSACTION;
-	select activeDocumentID into @activeID from documentLog where documentLogID = logID;
-	select activeDocumentID into @oldDocumentID from documentStaticId where ID = @activeID;
-	select documentID into @ID from documentLog where documentLogID = logID;
-    
-    update documentStaticId set activeDocumentID = @ID where activeDocument.ID=@activeID;
-    
-    INSERT INTO documentLog
-		VALUES (null, @oldDocumentID, @activeID, userID, UNIX_TIMESTAMP(NOW()), commentparam, 'rollback'); 
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+		ROLLBACK;
+        RESIGNAL;
+    END;
+
+	START TRANSACTION;
+		select activeDocumentID into @activeID from documentLog where documentLogID = logID;
+		select activeDocumentID into @oldDocumentID from documentStaticId where ID = @activeID;
+		select documentID into @ID from documentLog where documentLogID = logID;
+		
+		update documentStaticId set activeDocumentID = @ID where activeDocument.ID=@activeID;
+		
+		INSERT INTO documentLog
+			VALUES (null, @oldDocumentID, @activeID, userID, UNIX_TIMESTAMP(NOW()), commentparam, 'rollback'); 
+	COMMIT;
 END$$
 
 DROP PROCEDURE rollbackProject$$
 CREATE PROCEDURE `rollbackProject`(IN logID int, IN userID int, IN commentparam VARCHAR(512), out err int)
 BEGIN
-START TRANSACTION;
-	select projectId into @staticId from projectLog where projectLog.revisionNumber = logID;
-	select activeProjectId into @oldProjectID from projectStaticIds where ID = @staticId;
-	select affectedJournalEntry into @newActiveId from projectLog where projectLog.projectLogID = logID;
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+	    BEGIN
+			ROLLBACK;
+	        RESIGNAL;
+	    END;
 
-    update projectStaticIds set activeProjectId = @newActiveId where activeProprojectStaticIdsjects.ID=@staticId;
-    
-    INSERT INTO projectLog
-		VALUES (null, @staticId, @oldProjectID, userID, UNIX_TIMESTAMP(NOW()), commentparam, 'rollback'); 
+	START TRANSACTION;
+		select projectId into @staticId from projectLog where projectLog.revisionNumber = logID;
+		select activeProjectId into @oldProjectID from projectStaticIds where ID = @staticId;
+		select affectedJournalEntry into @newActiveId from projectLog where projectLog.projectLogID = logID;
+
+		update projectStaticIds set activeProjectId = @newActiveId where activeProprojectStaticIdsjects.ID=@staticId;
+		
+		INSERT INTO projectLog
+			VALUES (null, @staticId, @oldProjectID, userID, UNIX_TIMESTAMP(NOW()), commentparam, 'rollback'); 
+	COMMIT;
 END$$
 
 DROP PROCEDURE updateComponent$$
@@ -236,6 +326,12 @@ CREATE PROCEDURE `updateComponent`(
     IN logComment VARCHAR(512),
     out err int)
 BEGIN
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+		ROLLBACK;
+        RESIGNAL;
+    END;
+
 	START TRANSACTION;
 		INSERT INTO componentJournal VALUES(NULL, associatedComponentType, _status, _comment);
 		set @newEntry = last_insert_id();
@@ -250,6 +346,12 @@ CREATE PROCEDURE `updateComponentType`(IN nameparam VARCHAR(64), IN activeID int
 									   IN storageparam int(11), IN descriptionparam varchar(512), IN userid varchar(32), 
 									   IN commentparam varchar(512), OUT err int)
 BEGIN
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+		ROLLBACK;
+        RESIGNAL;
+    END;
+
 	START TRANSACTION;
 		INSERT INTO componentTypeJournal VALUES(NULL, nameparam, categoryId, storageparam, descriptionparam);
 		SELECT activeComponentID INTO @oldID from componentTypeStaticId WHERE ID = activeID;
@@ -269,6 +371,12 @@ CREATE PROCEDURE `updateDocument`(
     IN logComment VARCHAR(512),
     out err int)
 BEGIN
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+		ROLLBACK;
+        RESIGNAL;
+    END;
+
 	START TRANSACTION;
 		INSERT INTO documentJournal VALUES(NULL, filename, bucketPath, description);
         SELECT documentID INTO @oldID FROM documentStaticId WHERE ID = activeID;
@@ -280,6 +388,12 @@ END$$
 DROP PROCEDURE updateProject$$
 CREATE PROCEDURE `updateProject`(IN nameparam VARCHAR(64), IN activeProjectID int(11), IN userid varchar(32), IN commentparam varchar(512), OUT err INT)
 BEGIN 
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+		ROLLBACK;
+        RESIGNAL;
+    END;
+
 	START TRANSACTION;
 	    insert into projectJournal Values (NULL, nameparam);
 		set @newProjectID = LAST_INSERT_ID();
@@ -295,7 +409,20 @@ END$$
 DROP PROCEDURE updateUser$$
 CREATE PROCEDURE `updateUser`(IN userID VARCHAR(32), IN firstnameparam VARCHAR(32), IN lastnameparam VARCHAR(32), IN phonenumberparam VARCHAR(32))
 BEGIN
-UPDATE user
-SET firstname = firstnameparam, lastname = lastnameparam, phonenumber = phonenumberparam
-WHERE user.userID = userID;
+UPDATE user SET firstname = firstnameparam, lastname = lastnameparam, phonenumber = phonenumberparam WHERE user.userID = userID;
+END$$
+
+DROP FUNCTION getUserRole$$
+CREATE FUNCTION `getUserRole`(userID VARCHAR(128), projectID INT)
+RETURNS INT
+BEGIN
+	DECLARE SuperAdmin INT DEFAULT -1;
+	DECLARE userRole int DEFAULT -1;
+	SELECT `superuser` INTO SuperAdmin FROM `user` where `user`.`userID` = userID;
+	IF SuperAdmin = 1 THEN
+		SELECT roleID INTO userRole from `role` where role.rolename = 'SUPERADMIN';
+	ELSE
+		SELECT roleID INTO userRole from `projectRoles` where `projectRoles`.`userID` = userID AND `projectRoles`.`projectID` = projectID;
+	END IF; 
+	return userRole;
 END$$
