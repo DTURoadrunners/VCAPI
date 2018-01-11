@@ -25,7 +25,7 @@ namespace VCAPI.Controllers
 
 
         [HttpGet("{componentTypeId}")]
-        public async Task<IActionResult> GetComponentType([FromRoute]int componentTypeId)
+        public async Task<IActionResult> GetComponentType([FromRoute]int projectId, [FromRoute]int componentTypeId)
         {
             ComponentTypeInfo componentType = await repository.GetComponentType(componentTypeId);
             if (componentType != null)
@@ -52,17 +52,24 @@ namespace VCAPI.Controllers
             }
         }
 
+        public class ComponentTypeMarshallObject
+        {
+            public ComponentTypeInfo model;
+            public string comment;
+        }
+
         [VerifyModelState]
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> CreateComponentType([FromRoute] int projectId, [FromBody] ComponentTypeInfo model, [FromBody] string userId, [FromBody] string comment)
+        public async Task<IActionResult> CreateComponentType([FromRoute] int projectId, [FromBody] ComponentTypeMarshallObject marshall)
         {
-            if (await resourceAccess.GetRankForProject(User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value, 0) < Repository.RANK.STUDENT)
+            string userId = User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value;
+            if (await resourceAccess.GetRankForProject(userId, 0) < Repository.RANK.STUDENT)
             {
                 return Unauthorized();
             }
 
-            int id = await repository.CreateComponentType(model, projectId, userId, comment);
+            int id = await repository.CreateComponentType(marshall.model, projectId, userId, marshall.comment);
             if (id == -1)
             {
                 return new BadRequestObjectResult("Failed to create componenttype");
@@ -72,16 +79,17 @@ namespace VCAPI.Controllers
 
         [Authorize]
         [HttpPut("{componentTypeId}")]
-        public async Task<IActionResult> UpdateComponentType([FromRoute] int projectId, [FromBody] ComponentTypeInfo model, [FromBody] string userId, [FromBody] string comment)
+        public async Task<IActionResult> UpdateComponentType([FromRoute] int projectId, [FromRoute] int componentTypeId, [FromBody] ComponentTypeMarshallObject marshall)
         {
-            if (await resourceAccess.GetRankForProject(User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value, 0) < Repository.RANK.STUDENT)
+            string userId = User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value;
+            if (await resourceAccess.GetRankForProject(userId, 0) < Repository.RANK.STUDENT)
             {
                 return Unauthorized();
             }
 
-            if (!await repository.UpdateComponentType(model, projectId, userId, comment))
+            if (!await repository.UpdateComponentType(marshall.model, projectId, userId, marshall.comment))
             {
-                return new BadRequestObjectResult("Failed to update componenttype: " + model.id);
+                return new BadRequestObjectResult("Failed to update componenttype: " + marshall.model.id);
             }
 
             return Ok();
@@ -89,14 +97,15 @@ namespace VCAPI.Controllers
 
         [Authorize]
         [HttpPut("{componentTypeId}")]
-        public async Task<IActionResult> DeleteComponentType([FromRoute] int projectId, [FromRoute] int componentTypeId, [FromBody] string userId, [FromBody] string comment)
+        public async Task<IActionResult> DeleteComponentType([FromRoute] int projectId, [FromRoute] int componentTypeId, [FromBody]string reason)
         {
-            if (await resourceAccess.GetRankForProject(User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value, 0) < Repository.RANK.STUDENT)
+            string userId = User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value;
+            if (await resourceAccess.GetRankForProject(userId, 0) < Repository.RANK.STUDENT)
             {
                 return Unauthorized();
             }
 
-            if (!await repository.DeleteComponentType(componentTypeId, userId, comment))
+            if (!await repository.DeleteComponentType(componentTypeId, userId, reason))
             {
                 return new BadRequestObjectResult("Failed to delete componenttype: " + componentTypeId);
             }
