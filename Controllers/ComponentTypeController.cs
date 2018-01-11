@@ -11,7 +11,7 @@ using System.Security.Claims;
 
 namespace VCAPI.Controllers
 {
-    [Route("api/project/{projectId}/componentType/[controller]")]
+    [Route("api/project/{projectId}/[controller]")]
     public class ComponentTypeController : Controller
     {
         private readonly IComponentTypeRepository repository;
