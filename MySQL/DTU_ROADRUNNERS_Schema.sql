@@ -77,9 +77,9 @@ CREATE TABLE `projectRoles` (
     FOREIGN KEY (projectID) REFERENCES `projectStaticIds`(ID)
 );
 
-DROP VIEW IF EXISTS `project`;
-CREATE view `project` AS SELECT `projectStaticIds`.`ID`, `name` 
-FROM `projectStaticIds` join `projectJournal` ON `projectStaticIds`.`ID` = `projectJournal`.`projectID`;
+DROP VIEW IF EXISTS `projects`;
+CREATE view `projects` AS SELECT `projectStaticIds`.`ID`, `name` 
+FROM `projectStaticIds` join `projectJournal` ON `projectStaticIds`.`activeProjectId` = `projectJournal`.`projectID`;
 
 CREATE TABLE `componentTypeJournal`(
     componentTypeID INT NOT NULL AUTO_INCREMENT,
@@ -116,7 +116,7 @@ CREATE TABLE `componentTypeLog` (
 
 DROP VIEW IF EXISTS `componentTypes`;
 CREATE view `componentTypes` AS SELECT `ID`, `name`, `categoryID`, `storage`, `description` 
-FROM `componentTypeStaticId` join `componentTypeJournal` ON `componentTypeStaticId`.`ID` = `componentTypeJournal`.`componentTypeID`;
+FROM `componentTypeStaticId` join `componentTypeJournal` ON `componentTypeStaticId`.`activeComponentID` = `componentTypeJournal`.`componentTypeID`;
 
 CREATE TABLE `componentJournal` (
     componentID         INT NOT NULL AUTO_INCREMENT,
@@ -149,7 +149,7 @@ CREATE TABLE `componentLog` (
 );
 DROP VIEW IF EXISTS `components`;
 CREATE view `components` AS SELECT 'ID', `typeID`, `status`, `comment` 
-FROM `componentStaticId` join `componentJournal` ON `componentStaticId`.`ID` = componentJournal.componentID;
+FROM `componentStaticId` join `componentJournal` ON `componentStaticId`.`activeComponentId` = componentJournal.componentID;
 
 CREATE TABLE `documentJournal`(
     documentID              INT NOT NULL AUTO_INCREMENT,
@@ -184,7 +184,7 @@ CREATE TABLE `documentLog` (
 
 DROP VIEW IF EXISTS `documents`;
 CREATE view `documents` AS SELECT 'ID', `bucketpath`, `filename`, `description` 
-FROM `documentStaticId` join `documentJournal` ON `documentStaticId`.`ID` = `documentJournal`.`documentID`;
+FROM `documentStaticId` join `documentJournal` ON `documentStaticId`.`activeDocumentID` = `documentJournal`.`documentID`;
 
 insert into role VALUES(NULL, 'PROHIBITED');
 insert into role VALUES(NULL, 'GUEST');
