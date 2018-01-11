@@ -40,7 +40,7 @@ namespace VCAPI.Repository.ControllerTests
         }
         [Fact]
         public async void GetComponentReturnsBadRequest(){
-            OkObjectResult result = await controller.GetComponent(100) as OkObjectResult;
+            BadRequestObjectResult result = await controller.GetComponent(100) as BadRequestObjectResult;
             Assert.NotNull(result);
             Assert.Equal((int)HttpStatusCode.BadRequest, result.StatusCode);
 
@@ -58,7 +58,7 @@ namespace VCAPI.Repository.ControllerTests
             Assert.Equal(1, response.Count);
         }
         [Fact]
-        public async void CreatesComponentGivenCorrectModel(){
+        public async void CreatesComponentGivenCorrectModelAsSuper(){
            
             string username = "Somebody";
             access.AddSuperadmin(username);
@@ -68,6 +68,24 @@ namespace VCAPI.Repository.ControllerTests
             int expectedCreateId = repository.GetNextInsertId();
             
             CreatedResult result = await controller.CreateComponent(0, 1, info, username, "comment") as CreatedResult;
+            Assert.NotNull(result);
+            Assert.Equal((int)HttpStatusCode.Created, result.StatusCode);
+            int? createdId = result.Value as int?;
+            Assert.NotNull(createdId);
+            Assert.Equal(expectedCreateId, createdId);
+            Assert.True(repository.RepositoryContainsEntry((int)createdId));     
+            Assert.Equal(await repository.GetComponent((int)createdId),info);
+        }
+        public async void CreatesComponentGivenCorrectModelAsStudent(){
+           
+            string anotherUsername = "SomebodyElse";
+            access.AssignRankForProject(anotherUsername, 1, RANK.STUDENT);
+            ControllerTestUtility.SetCallersUsername(anotherUsername, controller);
+
+            ComponentInfo info = new ComponentInfo(0, "available", "comment");
+            int expectedCreateId = repository.GetNextInsertId();
+            
+            CreatedResult result = await controller.CreateComponent(0, 1, info, anotherUsername, "comment") as CreatedResult;
             Assert.NotNull(result);
             Assert.Equal((int)HttpStatusCode.Created, result.StatusCode);
             int? createdId = result.Value as int?;
@@ -107,9 +125,7 @@ namespace VCAPI.Repository.ControllerTests
         }
         [Fact]
         public async void RollbackComponent(){
-            //Findes den?
-            //rigtige rank?
-            //Er der noget at rollback til?
+            
         }
     }
 }

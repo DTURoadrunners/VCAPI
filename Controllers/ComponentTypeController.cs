@@ -6,6 +6,8 @@ using VCAPI.Filters;
 using VCAPI.Repository.Interfaces;
 using VCAPI.Repository.Models;
 using VCAPI.Repository;
+using System.Linq;
+using System.Security.Claims;
 
 namespace VCAPI.Controllers
 {
@@ -55,7 +57,7 @@ namespace VCAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateComponentType([FromRoute] int projectId, [FromBody] ComponentTypeInfo model, [FromBody] string userId, [FromBody] string comment)
         {
-            if (await resourceAccess.GetRankForProject(User.Identity.Name, projectId) < Repository.RANK.STUDENT)
+            if (await resourceAccess.GetRankForProject(User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value, 0) < Repository.RANK.STUDENT)
             {
                 return Unauthorized();
             }
@@ -72,7 +74,7 @@ namespace VCAPI.Controllers
         [HttpPut("{componentTypeId}")]
         public async Task<IActionResult> UpdateComponentType([FromRoute] int projectId, [FromBody] ComponentTypeInfo model, [FromBody] string userId, [FromBody] string comment)
         {
-            if (await resourceAccess.GetRankForProject(User.Identity.Name, projectId) < Repository.RANK.STUDENT)
+            if (await resourceAccess.GetRankForProject(User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value, 0) < Repository.RANK.STUDENT)
             {
                 return Unauthorized();
             }
@@ -89,7 +91,7 @@ namespace VCAPI.Controllers
         [HttpPut("{componentTypeId}")]
         public async Task<IActionResult> DeleteComponentType([FromRoute] int projectId, [FromRoute] int componentTypeId, [FromBody] string userId, [FromBody] string comment)
         {
-            if (await resourceAccess.GetRankForProject(User.Identity.Name, projectId) < Repository.RANK.STUDENT)
+            if (await resourceAccess.GetRankForProject(User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value, 0) < Repository.RANK.STUDENT)
             {
                 return Unauthorized();
             }
@@ -106,7 +108,7 @@ namespace VCAPI.Controllers
         [HttpPut("{componentTypeId}")]
         public async Task<IActionResult> rollbackComponentType([FromRoute] int projectId, [FromRoute] int logId, [FromBody] string userId, [FromBody] string comment)
         {
-            if (await resourceAccess.GetRankForProject(User.Identity.Name, projectId) < Repository.RANK.STUDENT)
+            if (await resourceAccess.GetRankForProject(User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value, 0) < Repository.RANK.STUDENT)
             {
                 return Unauthorized();
             }
