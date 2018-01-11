@@ -42,7 +42,7 @@ CREATE TABLE `categories`(
 
 CREATE TABLE `projectJournal`(
     projectID   INT NOT NULL AUTO_INCREMENT,
-    `name`      VARCHAR(64) NOT NULL UNIQUE,
+    `name`      VARCHAR(64) NOT NULL,
     PRIMARY KEY (projectID)
 );
 

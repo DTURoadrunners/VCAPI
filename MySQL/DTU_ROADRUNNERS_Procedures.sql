@@ -107,7 +107,7 @@ BEGIN
 		ROLLBACK;
         RESIGNAL;
     END;
-
+	
 	START TRANSACTION;
 	INSERT INTO projectJournal (name)
 	VALUES (LOWER(nameparam));
@@ -360,7 +360,7 @@ BEGIN
 END$$
 
 DROP PROCEDURE updateProject$$
-CREATE PROCEDURE `updateProject`(IN nameparam VARCHAR(64), IN activeProjectID int(11), IN userid varchar(32), IN commentparam varchar(512), OUT err INT)
+CREATE PROCEDURE `updateProject`(IN nameparam VARCHAR(64), IN activeProjectID int(11), IN userid varchar(32), IN commentparam varchar(512))
 BEGIN 
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -371,9 +371,9 @@ BEGIN
 	START TRANSACTION;
 	    insert into projectJournal Values (NULL, nameparam);
 		set @newProjectID = LAST_INSERT_ID();
-		select activeProjectId into @oldProjectID from projectStaticIds where ID = activeProjectID;
+		select activeProjectId into @oldProjectID from projectStaticIds where projectStaticIds.ID = activeProjectID;
 
-		update activeProjects SET projectID = @newProjectID where ID = activeProjectID; 
+		update projectStaticIds SET activeProjectId = @newProjectID where projectStaticIds.ID = activeProjectID; 
 
 		INSERT INTO projectLog
 		VALUES (NULL, activeProjectID, @oldProjectID, userid, UNIX_TIMESTAMP(NOW()), commentparam, 'updated');

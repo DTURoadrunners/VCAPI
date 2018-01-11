@@ -40,33 +40,19 @@ namespace VCAPI.Repository.MySQL
             using(Connection conn = await connector.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
                 command.CommandText = "getUserRole";
-                command.Parameters.AddWithValue("@userID", username);
-                command.Parameters.AddWithValue("@projectID", projId);
-                DbDataReader reader = await command.ExecuteReaderAsync();
-                if(!await reader.ReadAsync()){
-                    return RANK.PROHIBITED;
-                }
-                else{
-                    int rank = reader.GetInt32(0);
-                    return (RANK)rank;
-                }
-
-            }
-        }
-
-        public async Task<bool> IsSuperAdmin(string username)
-        {
-           using(Connection conn = await connector.Create()){
-                MySqlCommand command = conn.Get().CreateCommand();
-                command.CommandText = "getUserRole";
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@userID", username);
                 command.Parameters.AddWithValue("@projectID", -1);
                 command.Parameters.AddWithValue("@userRole", MySqlDbType.Int32).Direction = ParameterDirection.Output;
                 await command.ExecuteNonQueryAsync();
                 int rank = (int)command.Parameters["@userRole"].Value;
-                return (RANK)rank == RANK.SUPERADMIN;
+                return (RANK)rank;
             }
+        }
+
+        public async Task<bool> IsSuperAdmin(string username)
+        {
+           return await GetRankForProject(username, -1) == RANK.SUPERADMIN;
         }
     }
 }

@@ -11,6 +11,8 @@ using System.Net.Http.Headers;
 using Microsoft.AspNetCore;
 using Newtonsoft.Json.Linq;
 using VCAPI.Repository.Models;
+using System.Net;
+using VCAPI.Controllers;
 
 namespace tests.IntegrationTest
 {
@@ -61,6 +63,23 @@ namespace tests.IntegrationTest
             HttpResponseMessage response = await client.SendAsync(message);
             response.EnsureSuccessStatusCode();
         }
+        [Fact]
+        public async void CanRegisterUser()
+        {
+            RegisterCredentials registerObject = new RegisterCredentials()
+            {
+                username = "Hello",
+                firstname = "Test",
+                lastname = "User",
+                password = "Sesame",
+                CASCODE = "Ignored"
+            };
+            HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Post, "api/signup");
+            message.Content = new ByteArrayContent(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(registerObject)));
+            message.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            HttpResponseMessage response = await client.SendAsync(message);
+            response.EnsureSuccessStatusCode();
+        }
 
         [Fact]
         public async void CanLoginUser()
@@ -72,24 +91,98 @@ namespace tests.IntegrationTest
             VerifyJWTToken(jwt);
         }
 
-        [Fact]
-        public async void CheckProjectEndpointCRUD()
+        private int GetCreatedId(string path)
         {
-            JObject jObject = new JObject();
-            ProjectInfo newProject = new ProjectInfo(0, "TestProject");
-            jObject["info"] = JObject.FromObject(newProject);
-            jObject["comment"] = "For testing purposes";
-            string strBody = jObject.ToString();
+            int terminator = path.LastIndexOf('/');
+            string strId = path.Substring(terminator + 1);
+            return int.Parse(strId);
+        }
+
+        private async Task<int> TestCreateProject(ProjectInfo objectToCreate)
+        {
+            // Shady business
+            ProjectController.CreateProjectMarshall marshall = new ProjectController.CreateProjectMarshall();
+            marshall.info = objectToCreate;
+            marshall.comment = "Created Test Project";
+
+            string strBody = JsonConvert.SerializeObject(marshall);
+            
             string jwtToken = await GetJWTToken(LoginCredentialProvider.GetSuperAdmin());
             SetAuthorization(client, jwtToken);
 
             HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Post, "api/projects");
-            message.Content = new ByteArrayContent(jObject.ToByteArray());
+            message.Content = new ByteArrayContent(Encoding.UTF8.GetBytes(strBody));
             message.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
             
             HttpResponseMessage response = await client.SendAsync(message);
-            response.EnsureSuccessStatusCode();
+            Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+            Assert.NotNull(response.Headers.Location);
+
+            int createdId = GetCreatedId(response.Headers.Location.ToString());
+            Assert.True(createdId >= 0);
+            
+            return createdId;
         }
 
+        private async Task TestUpdateProject(ProjectInfo objectToUpdate)
+        {
+            ProjectController.CreateProjectMarshall marshall = new ProjectController.CreateProjectMarshall();
+            marshall.info = objectToUpdate;
+            marshall.comment = "Test update";
+            string strBody = JsonConvert.SerializeObject(marshall);
+            string jwtToken = await GetJWTToken(LoginCredentialProvider.GetSuperAdmin());
+            SetAuthorization(client, jwtToken);
+
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Put, "api/projects/" + objectToUpdate.id);
+            request.Content = new ByteArrayContent(Encoding.UTF8.GetBytes(strBody));
+            request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            HttpResponseMessage response = await client.SendAsync(request);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        private async Task<ProjectInfo> TestGetProject(int id)
+        {
+            string jwtToken = await GetJWTToken(LoginCredentialProvider.GetSuperAdmin());
+            SetAuthorization(client, jwtToken);
+
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, "api/projects/"+id);
+            HttpResponseMessage response = await client.SendAsync(request);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            
+            byte[] data = await response.Content.ReadAsByteArrayAsync();
+            string strData = Encoding.UTF8.GetString(data);
+            return JsonConvert.DeserializeObject<ProjectInfo>(strData);
+        }
+
+        [Fact]
+        public async void CheckProjectEndpointCRUD()
+        {
+            ProjectInfo newProject = new ProjectInfo(0, "TestProject1");
+            
+            int createdId = await TestCreateProject(newProject);
+            newProject.id = createdId;
+            newProject.name = "NewName";
+            await TestUpdateProject(newProject);
+            ProjectInfo info = await TestGetProject(createdId);
+            Assert.Equal(newProject.name, info.name);
+        }
+
+        [Fact]
+        public async void CheckComponentTypeEndpointCRUD()
+        {
+            string jwtToken = await GetJWTToken(LoginCredentialProvider.GetSuperAdmin());
+            SetAuthorization(client, jwtToken);
+            string strBody = "";
+            HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Post, "api/projects/1/componentType");
+            message.Content = new ByteArrayContent(Encoding.UTF8.GetBytes(strBody));
+            message.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+        }
+
+        [Fact]
+        public async void CheckComponentEndpointCRUD()
+        {
+
+        }
     }
 }

@@ -31,8 +31,8 @@ namespace VCAPI.Repository.MySQL
                 command.Parameters.AddWithValue("@nameparam", name);
                 command.Parameters.AddWithValue("@userid", userId);
                 command.Parameters.AddWithValue("@commentparam", comment);
-                command.Parameters.AddWithValue("@id", MySqlDbType.Int32).Direction = ParameterDirection.Output;
-                await command.ExecuteNonQueryAsync();
+                command.Parameters.Add("@id", DbType.Int32).Direction = ParameterDirection.Output;
+                command.ExecuteNonQuery();
                 return (int)command.Parameters["@id"].Value;
             }
         }
@@ -70,21 +70,27 @@ namespace VCAPI.Repository.MySQL
 
         public async Task<List<ProjectInfo>> GetProjects()
         {
-            using(Connection conn = await connection.Create()){
-                MySqlCommand command = conn.Get().CreateCommand();
-                command.CommandText = "getActiveProjects";
-                command.CommandType = CommandType.StoredProcedure;
-                DbDataReader reader = await command.ExecuteReaderAsync();
-                if(!await reader.NextResultAsync()){
-                    return null;
-                }
-                List <ProjectInfo> list = new List<ProjectInfo>();
-                while (reader.NextResult()){
-                    list.Add(new ProjectInfo(reader.GetInt32(0), reader.GetString(1)));
-                }
-                
-                return list;
+            try{
+                using(Connection conn = await connection.Create()){
+                                MySqlCommand command = conn.Get().CreateCommand();
+                                command.CommandText = "getActiveProjects";
+                                command.CommandType = CommandType.StoredProcedure;
+                                DbDataReader reader = await command.ExecuteReaderAsync();
+                                if(!await reader.NextResultAsync()){
+                                    return null;
+                                }
+                                List <ProjectInfo> list = new List<ProjectInfo>();
+                                while (reader.NextResult()){
+                                    list.Add(new ProjectInfo(reader.GetInt32(0), reader.GetString(1)));
+                                }
+                                
+                                return list;
+                            }
+            }catch(MySqlException e)
+            {
+               return new List<ProjectInfo>();
             }
+           
         }
 
         public async Task<bool> UpdateProject(ProjectInfo inf, int id, string userId, string comment)
@@ -97,8 +103,8 @@ namespace VCAPI.Repository.MySQL
                 command.Parameters.AddWithValue("@activeProjectID", id);
                 command.Parameters.AddWithValue("@userid", userId);
                 command.Parameters.AddWithValue("@commentparam", comment);
-               
-               return await command.ExecuteNonQueryAsync() == 1;
+               // TODO: Make out param that determines if any columns were actually updated
+               return true;
             }
         }
 

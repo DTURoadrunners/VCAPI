@@ -48,17 +48,17 @@ namespace VCAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> createProject([FromBody] CreateProjectMarshall request)
         { 
-            
-            if(!await resourceAccess.IsSuperAdmin(User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value)){
+            string username = User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value;
+            if(!await resourceAccess.IsSuperAdmin(username)){
                 return Unauthorized();
             }
             
-            int id = await repository.CreateProject(request.info.name, User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value, request.comment);
+            int id = await repository.CreateProject(request.info.name, username, request.comment);
             if(id == -1){
                 return new BadRequestObjectResult("Failed to create project");
             }
             else{
-                return Created("/projects/", id);
+                return Created("/projects/" + id, null);
             }
         }
 
@@ -76,14 +76,15 @@ namespace VCAPI.Controllers
 
         [Authorize]
         [HttpPut("{projectId}")]
-        public async Task<IActionResult> updateProject([FromRoute] int id, [FromBody] ProjectInfo model, [FromBody]string reason)
+        public async Task<IActionResult> updateProject([FromRoute] int projectId, [FromBody] CreateProjectMarshall marshall)
         {
-            RANK rank = await resourceAccess.GetRankForProject(User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value, id);
+            string userName = User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value;
+            RANK rank = await resourceAccess.GetRankForProject(userName, projectId);
             if(rank < RANK.ADMIN){
                 return Unauthorized();
             }
 
-            if(!await repository.UpdateProject(model, id, User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value, reason)){
+            if(!await repository.UpdateProject(marshall.info, projectId, userName, marshall.comment)){
                 return BadRequest("Did not change project");
             }
             return Ok();
