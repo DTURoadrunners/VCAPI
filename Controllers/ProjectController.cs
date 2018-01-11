@@ -63,9 +63,9 @@ namespace VCAPI.Controllers
         }
 
         [HttpGet("{projectId}")]
-        public async Task<IActionResult> getProject([FromRoute] int id)
+        public async Task<IActionResult> getProject([FromRoute] int projectId)
         {
-            ProjectInfo proj = await repository.GetProject(id);
+            ProjectInfo proj = await repository.GetProject(projectId);
             if(proj != null){
                 return Ok(proj);
             }

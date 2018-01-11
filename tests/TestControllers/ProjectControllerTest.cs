@@ -73,10 +73,9 @@ namespace VCAPI.Repository.ControllerTests
             access.AddSuperadmin(username);
             ControllerTestUtility.SetCallersUsername(username, controller);
 
-            ProjectInfo info = new ProjectInfo(0, "TestProject");
             int expectedCreateId = repository.GetNextInsertId();
             ProjectController.CreateProjectMarshall marshall;
-            marshall.info = info;
+            marshall.info = new ProjectInfo(0, "TestProject");;
             marshall.comment = "Initialize create";
             CreatedResult result = await controller.createProject(marshall) as CreatedResult;
             Assert.NotNull(result);
@@ -94,8 +93,10 @@ namespace VCAPI.Repository.ControllerTests
             const string newProjectName = "UpdatedProject";
             access.AddSuperadmin(username);
             ControllerTestUtility.SetCallersUsername(username, controller);
-            ProjectInfo info = new ProjectInfo(0, newProjectName);
-            OkResult result = await controller.updateProject(existingProjectId, info, "Typo") as OkResult;
+            ProjectController.CreateProjectMarshall marshall;
+            marshall.info = new ProjectInfo(0, newProjectName);
+            marshall.comment = "Typo";
+            OkResult result = await controller.updateProject(existingProjectId, marshall) as OkResult;
             Assert.NotNull(result);
             Assert.Equal((int)HttpStatusCode.OK, result.StatusCode);
 

@@ -55,16 +55,17 @@ namespace VCAPI.Repository.MySQL
         {
             using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
-                command.CommandText = "getProject";
-                command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@projectID", id);
-                command.Parameters["@projectID"].Direction = ParameterDirection.Input;
-                DbDataReader reader = await command.ExecuteReaderAsync();
-                if(!await reader.NextResultAsync()){
-                    return null;
+                command.CommandText = "select name from projects where ID = @id";
+                command.Parameters.Add("@id", MySqlDbType.Int64).Value = id;
+                command.Prepare();
+                using(DbDataReader reader = await command.ExecuteReaderAsync())
+                {
+                    if(!await reader.ReadAsync()){
+                        return null;
+                    }
+                    return new ProjectInfo(id, reader.GetString(0));
                 }
                 
-                return new ProjectInfo(reader.GetInt32(0), reader.GetString(1));
             }
         }
 
@@ -103,6 +104,7 @@ namespace VCAPI.Repository.MySQL
                 command.Parameters.AddWithValue("@activeProjectID", id);
                 command.Parameters.AddWithValue("@userid", userId);
                 command.Parameters.AddWithValue("@commentparam", comment);
+                await command.ExecuteNonQueryAsync();
                // TODO: Make out param that determines if any columns were actually updated
                return true;
             }
