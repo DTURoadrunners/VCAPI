@@ -11,7 +11,7 @@ using VCAPI.Repository;
 
 namespace VCAPI.Controllers
 {
-    [Route("api/project/{projectId}/componentType/{componentTypeId}/[controller]")]
+    [Route("api/projects/{projectId}/componentType/{componentTypeId}/[controller]")]
     public class ComponentController : Controller
     {
         private readonly IComponentRepository repository;
@@ -49,36 +49,46 @@ namespace VCAPI.Controllers
             }
         }
 
+        public class ComponentMarshallObject
+        {
+            public ComponentInfo model;
+            public string comment;
+        }
+
         [VerifyModelState]
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> CreateComponent([FromRoute] int projectId, [FromRoute] int componentTypeId, [FromBody] ComponentInfo model, [FromBody] string userId, [FromBody] string comment)
+        public async Task<IActionResult> CreateComponent([FromRoute] int projectId, [FromRoute] int componentTypeId, [FromBody] ComponentMarshallObject marshall)
         {
-            if (await resourceAccess.GetRankForProject(User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value, 0) < Repository.RANK.STUDENT)
+            string userId = User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value;
+            if (await resourceAccess.GetRankForProject(userId, projectId) < Repository.RANK.STUDENT)
             {
                 return Unauthorized();
             }
 
-            int id = await repository.CreateComponent(componentTypeId, model, userId, comment);
+            int id = await repository.CreateComponent(componentTypeId, marshall.model, userId, marshall.comment);
             if (id == -1)
             {
                 return new BadRequestObjectResult("Failed to create component");
             }
-            return Created("api/project/" + projectId + "/componentType/" + componentTypeId + "/component/", id);
+            return Created("api/project/" + projectId + "/componentType/" + componentTypeId + "/component/" + id, null);
         }
 
         [Authorize]
         [HttpPut("{componentId}")]
-        public async Task<IActionResult> UpdateComponent([FromRoute] int projectId, [FromRoute] int componentTypeId, [FromBody] ComponentInfo model, [FromBody] string userId, [FromBody] string comment)
+        public async Task<IActionResult> UpdateComponent([FromRoute] int projectId, [FromRoute] int componentTypeId, [FromRoute]int componentId, [FromBody] ComponentMarshallObject marshall)
         {
-            if (await resourceAccess.GetRankForProject(User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value, 0) < Repository.RANK.STUDENT)
+            string userId = User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value;
+            if (await resourceAccess.GetRankForProject(userId, projectId) < Repository.RANK.STUDENT)
             {
                 return Unauthorized();
             }
 
-            if (!await repository.UpdateComponent(componentTypeId, model, userId, comment))
+            marshall.model.id = componentId;
+
+            if (!await repository.UpdateComponent(componentTypeId, marshall.model, userId, marshall.comment))
             {
-                return new BadRequestObjectResult("Failed to update component: " + model.id);
+                return new BadRequestObjectResult("Failed to update component: " + marshall.model.id);
             }
 
             return Ok();
@@ -86,9 +96,10 @@ namespace VCAPI.Controllers
 
         [Authorize]
         [HttpPut("{componentId}")]
-        public async Task<IActionResult> DeleteComponent([FromRoute] int projectId, [FromRoute] int componentId, [FromBody] string userId, [FromBody] string comment)
+        public async Task<IActionResult> DeleteComponent([FromRoute] int projectId, [FromRoute] int componentId, [FromBody] string comment)
         {
-            if (await resourceAccess.GetRankForProject(User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value, 0) < Repository.RANK.STUDENT)
+            string userId = User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value;
+            if (await resourceAccess.GetRankForProject(userId, projectId) < Repository.RANK.STUDENT)
             {
                 return Unauthorized();
             }
