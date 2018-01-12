@@ -49,7 +49,7 @@ namespace VCAPI.Controllers
             }
         }
 
-        public class ComponentMarshallObject
+        public struct ComponentMarshallObject
         {
             public ComponentInfo model;
             public string comment;

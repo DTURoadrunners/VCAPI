@@ -64,17 +64,20 @@ namespace VCAPI.Repository.ControllerTests
             access.AddSuperadmin(username);
             ControllerTestUtility.SetCallersUsername(username, controller);
 
-            ComponentInfo info = new ComponentInfo(0, "available", "comment");
             int expectedCreateId = repository.GetNextInsertId();
+            ComponentController.ComponentMarshallObject marshall;
+
+            marshall.model = new ComponentInfo(0, "available", "comment");
+            marshall.comment = "initialize create";
             
-            CreatedResult result = await controller.CreateComponent(0, 1, info, username, "comment") as CreatedResult;
+            CreatedResult result = await controller.CreateComponent(0, 1, marshall) as CreatedResult;
             Assert.NotNull(result);
             Assert.Equal((int)HttpStatusCode.Created, result.StatusCode);
             int? createdId = result.Value as int?;
             Assert.NotNull(createdId);
             Assert.Equal(expectedCreateId, createdId);
             Assert.True(repository.RepositoryContainsEntry((int)createdId));     
-            Assert.Equal(await repository.GetComponent((int)createdId),info);
+            Assert.Equal(await repository.GetComponent((int)createdId),marshall.model);
         }
         public async void CreatesComponentGivenCorrectModelAsStudent(){
            
@@ -82,17 +85,20 @@ namespace VCAPI.Repository.ControllerTests
             access.AssignRankForProject(anotherUsername, 1, RANK.STUDENT);
             ControllerTestUtility.SetCallersUsername(anotherUsername, controller);
 
-            ComponentInfo info = new ComponentInfo(0, "available", "comment");
             int expectedCreateId = repository.GetNextInsertId();
+            ComponentController.ComponentMarshallObject marshall;
+
+            marshall.model = new ComponentInfo(0, "available", "comment");
+            marshall.comment = "initialize create";
             
-            CreatedResult result = await controller.CreateComponent(0, 1, info, anotherUsername, "comment") as CreatedResult;
+            CreatedResult result = await controller.CreateComponent(0, 1, marshall) as CreatedResult;
             Assert.NotNull(result);
             Assert.Equal((int)HttpStatusCode.Created, result.StatusCode);
             int? createdId = result.Value as int?;
             Assert.NotNull(createdId);
             Assert.Equal(expectedCreateId, createdId);
             Assert.True(repository.RepositoryContainsEntry((int)createdId));     
-            Assert.Equal(await repository.GetComponent((int)createdId),info);
+            Assert.Equal(await repository.GetComponent((int)createdId),marshall.model);
         }
 
         [Fact]
@@ -101,8 +107,11 @@ namespace VCAPI.Repository.ControllerTests
             const string username = "Somebody";
             const int newComponentTypeid = 101;
             ControllerTestUtility.SetCallersUsername(username, controller);
-            ComponentInfo info = new ComponentInfo(1, "newStatus", "newComment");
-            OkResult result = await controller.UpdateComponent(0, newComponentTypeid, info,"somebody", "comment") as OkResult;
+            ComponentController.ComponentMarshallObject marshall;
+
+            marshall.model = new ComponentInfo(0, "available", "comment");
+            marshall.comment = "initialize update";
+            OkResult result = await controller.UpdateComponent(0, newComponentTypeid, 1, marshall) as OkResult;
             Assert.NotNull(result);
             Assert.Equal((int)HttpStatusCode.OK, result.StatusCode);
 
@@ -117,7 +126,7 @@ namespace VCAPI.Repository.ControllerTests
             access.AddSuperadmin(username);
             ControllerTestUtility.SetCallersUsername(username, controller);
 
-            OkResult result = await controller.DeleteComponent(0, existingComponentId, "Somebody", "SletMig") as OkResult;
+            OkResult result = await controller.DeleteComponent(0, existingComponentId, "deleteThis") as OkResult;
             Assert.NotNull(result);
             Assert.Equal((int)HttpStatusCode.OK, result.StatusCode);
 
