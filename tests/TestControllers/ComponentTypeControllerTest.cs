@@ -103,13 +103,14 @@ namespace VCAPI.Repository.ControllerTests
         public async void UpdatesComponentTypeIfSuperUser(){
              
             const string username = "Somebody";
+            access.AddSuperadmin(username);
             const int newComponentTypeid = 101;
             ControllerTestUtility.SetCallersUsername(username, controller);
             ComponentTypeController.ComponentTypeMarshallObject input = new ComponentTypeController.ComponentTypeMarshallObject();        
             ComponentTypeInfo info = new ComponentTypeInfo(18, "TestTestTest", 12, 123, "TestComment");
             input.model = info;
             input.comment = "Test component type";
-            OkResult result = await controller.UpdateComponentType(1, 0, input) as OkResult;
+            OkResult result = await controller.UpdateComponentType(1, 1, input) as OkResult;
             Assert.NotNull(result);
             Assert.Equal((int)HttpStatusCode.OK, result.StatusCode);
 

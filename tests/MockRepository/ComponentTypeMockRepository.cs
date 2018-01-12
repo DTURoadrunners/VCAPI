@@ -37,7 +37,7 @@ namespace tests.MockRepository
 
         public async Task<ComponentTypeInfo> GetComponentType(int id, int projectId)
         {
-            if(RepositoryContainsEntry(id))
+            if(RepositoryContainsEntry(projectId))
             {
                 return repository[id];
             }
