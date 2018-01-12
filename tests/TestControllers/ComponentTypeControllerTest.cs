@@ -75,7 +75,7 @@ namespace VCAPI.Repository.ControllerTests
             Assert.NotNull(createdId);
             Assert.Equal(expectedCreateId, createdId);
             Assert.True(repository.RepositoryContainsEntry((int)createdId));     
-            Assert.Equal(await repository.GetComponentType((int)createdId),info);  
+            Assert.Equal(await repository.GetComponentType((int)createdId, 1),info);  
         }
         public async void CreatesComponentTypeGivenCorrectModelAsStudent(){
            
@@ -97,7 +97,7 @@ namespace VCAPI.Repository.ControllerTests
             Assert.NotNull(createdId);
             Assert.Equal(expectedCreateId, createdId);
             Assert.True(repository.RepositoryContainsEntry((int)createdId));     
-            Assert.Equal(await repository.GetComponentType((int)createdId),info);
+            Assert.Equal(await repository.GetComponentType((int)createdId, 1),info);
         }
         [Fact]
         public async void UpdatesComponentTypeIfSuperUser(){
@@ -113,7 +113,7 @@ namespace VCAPI.Repository.ControllerTests
             Assert.NotNull(result);
             Assert.Equal((int)HttpStatusCode.OK, result.StatusCode);
 
-            ComponentTypeInfo repositoryEntry = await repository.GetComponentType(existingComponentTypeId);
+            ComponentTypeInfo repositoryEntry = await repository.GetComponentType(existingComponentTypeId, 1);
             Assert.NotNull(repositoryEntry);
             Assert.Equal(newComponentTypeid, repositoryEntry.id);
         }
@@ -128,7 +128,7 @@ namespace VCAPI.Repository.ControllerTests
             Assert.NotNull(result);
             Assert.Equal((int)HttpStatusCode.OK, result.StatusCode);
 
-            Assert.Null(await repository.GetComponentType(existingComponentTypeId));     
+            Assert.Null(await repository.GetComponentType(existingComponentTypeId, 1));     
         }
         [Fact]
         public async void RollbackComponent(){
