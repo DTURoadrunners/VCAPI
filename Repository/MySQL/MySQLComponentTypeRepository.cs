@@ -30,26 +30,28 @@ namespace VCAPI.Repository.MySQL
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@nameparam", info.name);
                 command.Parameters.AddWithValue("@activeProjectIDParam", projectId);
-                command.Parameters.AddWithValue("@categoryID", info.categoryID);
+                command.Parameters.AddWithValue("@categoryId", info.categoryID);
                 command.Parameters.AddWithValue("@storageparam", info.storage);
                 command.Parameters.AddWithValue("@description", info.description);
                 command.Parameters.AddWithValue("@userid", userId);
                 command.Parameters.AddWithValue("@commentparam", comment);
-
-                return await command.ExecuteNonQueryAsync();
+                command.Parameters.Add("@id", DbType.Int32).Direction = ParameterDirection.Output;
+                await command.ExecuteNonQueryAsync();
+                return (int)command.Parameters["@id"].Value;
             }
         }
 
-         public async Task<ComponentTypeInfo> GetComponentType(int Id)
+         public async Task<ComponentTypeInfo> GetComponentType(int componentTypeId, int projectId)
         {
             using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
-                command.CommandText = "getComponenttype";
+                command.CommandText = "select ID, name, categoryID, storage, description from componentTypes where ID = @ID AND associatedProject = @projectId";
                 command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@ID", Id);
-                command.Parameters["@ID"].Direction = ParameterDirection.Input;
+                command.Parameters.AddWithValue("@ID", componentTypeId);
+                command.Parameters.AddWithValue("@projectId", projectId);
+                command.Prepare();
                 DbDataReader reader = await command.ExecuteReaderAsync();
-                if(!await reader.NextResultAsync()){
+                if(!await reader.ReadAsync()){
                     return null;
                 }
                 
@@ -61,51 +63,47 @@ namespace VCAPI.Repository.MySQL
         {
             using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
-                command.CommandText = "getActiveComponenttypes";
+                command.CommandText = "select ID, name, categoryID, storage, description from componentTypes where associatedProject = @projectId";
                 command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@projectID", projectId);
-                command.Parameters["@ID"].Direction = ParameterDirection.Input;
+                command.Parameters.AddWithValue("@projectId", projectId);
+                command.Prepare();
                 DbDataReader reader = await command.ExecuteReaderAsync();
-                if(!await reader.NextResultAsync()){
-                    return null;
-                }
                 List <ComponentTypeInfo> list = new List<ComponentTypeInfo>();
-                while (reader.NextResult()){
+                while (await reader.ReadAsync()){
                     list.Add(new ComponentTypeInfo(reader.GetInt32(0), reader.GetString(1), reader.GetInt32(2), reader.GetInt32(3), reader.GetString(4)));
                 }
-                
                 return list;
             }
         }
         
-        public async Task<bool> UpdateComponentType(ComponentTypeInfo info, int projectId, string userId, string comment)
+        public async Task<bool> UpdateComponentType(ComponentTypeInfo info, string userId, string comment)
         {
             using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
                 command.CommandText = "updateComponenttype";
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@nameparam", info.name);
-                command.Parameters.AddWithValue("@activeID", projectId);
+                command.Parameters.AddWithValue("@componentTypeId", info.id);
                 command.Parameters.AddWithValue("@categoryID", info.categoryID);
                 command.Parameters.AddWithValue("@storageparam", info.storage);
                 command.Parameters.AddWithValue("@descriptionparam", info.description);
                 command.Parameters.AddWithValue("@userid", userId);
                 command.Parameters.AddWithValue("@commentparam", comment);
-               
-               return await command.ExecuteNonQueryAsync() == 1;
+                await command.ExecuteNonQueryAsync();
+                return true;
             }
         }
-        public async Task<bool> DeleteComponentType(int ID, string userId, string comment)
+        public async Task<bool> DeleteComponentType(int projectId, string userId, string comment)
         {
             using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
                 command.CommandText = "deleteComponenttype";
                 command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@activeComponentTypeID", ID);
+                command.Parameters.AddWithValue("@activeComponentTypeID", projectId);
                 command.Parameters.AddWithValue("@userid", userId);
                 command.Parameters.AddWithValue("@commentparam", comment);
-               
-               return await command.ExecuteNonQueryAsync() == 1;
+                await command.ExecuteNonQueryAsync();
+                return true;
             }
         }
 

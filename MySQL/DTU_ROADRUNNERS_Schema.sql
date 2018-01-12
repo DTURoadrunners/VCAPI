@@ -115,7 +115,7 @@ CREATE TABLE `componentTypeLog` (
 );
 
 DROP VIEW IF EXISTS `componentTypes`;
-CREATE view `componentTypes` AS SELECT `ID`, `name`, `categoryID`, `storage`, `description` 
+CREATE view `componentTypes` AS SELECT `ID`, `associatedProject`, `name`, `categoryID`, `storage`, `description` 
 FROM `componentTypeStaticId` join `componentTypeJournal` ON `componentTypeStaticId`.`activeComponentID` = `componentTypeJournal`.`componentTypeID`;
 
 CREATE TABLE `componentJournal` (

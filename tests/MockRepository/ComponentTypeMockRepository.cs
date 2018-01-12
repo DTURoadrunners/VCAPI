@@ -25,17 +25,17 @@ namespace tests.MockRepository
             return createdIndex;
         }
 
-        public async Task<bool> UpdateComponentType(ComponentTypeInfo info, int projectId, string userId, string comment)
+        public async Task<bool> UpdateComponentType(ComponentTypeInfo info, string userId, string comment)
         {
-           if(RepositoryContainsEntry(projectId))
+           if(RepositoryContainsEntry(info.id))
             {
-                repository[projectId] = info;
+                repository[info.id] = info;
                 return true;
             }
             return false;
         }
 
-        public async Task<ComponentTypeInfo> GetComponentType(int id)
+        public async Task<ComponentTypeInfo> GetComponentType(int id, int projectId)
         {
             if(RepositoryContainsEntry(id))
             {

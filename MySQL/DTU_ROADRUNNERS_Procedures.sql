@@ -316,7 +316,7 @@ BEGIN
 END$$
 
 DROP PROCEDURE updateComponentType$$
-CREATE PROCEDURE `updateComponentType`(IN nameparam VARCHAR(64), IN activeID int(11), IN categoryId int(11), 
+CREATE PROCEDURE `updateComponentType`(IN nameparam VARCHAR(64), IN componentTypeId int(11), IN categoryId int(11), 
 									   IN storageparam int(11), IN descriptionparam varchar(512), IN userid varchar(32), 
 									   IN commentparam varchar(512), OUT err int)
 BEGIN
@@ -328,9 +328,9 @@ BEGIN
 
 	START TRANSACTION;
 		INSERT INTO componentTypeJournal VALUES(NULL, nameparam, categoryId, storageparam, descriptionparam);
-		SELECT activeComponentID INTO @oldID from componentTypeStaticId WHERE ID = activeID;
+		SELECT activeComponentID INTO @oldID from componentTypeStaticId WHERE ID = componentTypeId;
 		set @newEntry = LAST_INSERT_ID();
-		UPDATE componentTypeStaticId SET componentTypeStaticId.activeComponentID = @newEntry WHERE componentTypeStaticId.ID = activeID;
+		UPDATE componentTypeStaticId SET componentTypeStaticId.activeComponentID = @newEntry WHERE componentTypeStaticId.ID = componentTypeId;
 		INSERT INTO componentTypeLog VALUES(NULL, @newEntry, @oldID, userid, UNIX_TIMESTAMP(NOW()), commentparam, 'updated');
 	COMMIT;
 END$$

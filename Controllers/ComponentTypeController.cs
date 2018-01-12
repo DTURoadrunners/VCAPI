@@ -27,7 +27,7 @@ namespace VCAPI.Controllers
         [HttpGet("{componentTypeId}")]
         public async Task<IActionResult> GetComponentType([FromRoute]int projectId, [FromRoute]int componentTypeId)
         {
-            ComponentTypeInfo componentType = await repository.GetComponentType(componentTypeId);
+            ComponentTypeInfo componentType = await repository.GetComponentType(componentTypeId, projectId);
             if (componentType != null)
             {
                 return Ok(componentType);
@@ -87,7 +87,7 @@ namespace VCAPI.Controllers
                 return Unauthorized();
             }
 
-            if (!await repository.UpdateComponentType(marshall.model, projectId, userId, marshall.comment))
+            if (!await repository.UpdateComponentType(marshall.model, userId, marshall.comment))
             {
                 return new BadRequestObjectResult("Failed to update componenttype: " + marshall.model.id);
             }
