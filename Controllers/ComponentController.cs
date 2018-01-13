@@ -95,7 +95,7 @@ namespace VCAPI.Controllers
         }
 
         [Authorize]
-        [HttpPut("{componentId}")]
+        [HttpDelete("{componentId}")]
         public async Task<IActionResult> DeleteComponent([FromRoute] int projectId, [FromRoute] int componentId, [FromBody] string comment)
         {
             string userId = User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value;
@@ -113,7 +113,7 @@ namespace VCAPI.Controllers
         }
 
         [Authorize]
-        [HttpPut("{componentId}")]
+        [HttpPost("{componentId}/rollback")]
         public async Task<IActionResult> rollbackComponent([FromRoute] int projectId, [FromRoute] int logId, [FromBody] string userId, [FromBody] string comment)
         {
             if (await resourceAccess.GetRankForProject(User.Identity.Name, projectId) < Repository.RANK.STUDENT)

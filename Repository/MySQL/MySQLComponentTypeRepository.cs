@@ -45,10 +45,9 @@ namespace VCAPI.Repository.MySQL
         {
             using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
-                command.CommandText = "select ID, name, categoryID, storage, description from componentTypes where ID = @ID AND associatedProject = @projectId";
-                command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@ID", componentTypeId);
-                command.Parameters.AddWithValue("@projectId", projectId);
+                command.CommandText = "select ID, name, categoryID, storage, description from componentTypes where ID = @ID AND associatedProject = @projectId;";
+                command.Parameters.Add("@ID", DbType.Int32).Value = componentTypeId;
+                command.Parameters.Add("@projectId", DbType.Int32).Value = projectId;
                 command.Prepare();
                 DbDataReader reader = await command.ExecuteReaderAsync();
                 if(!await reader.ReadAsync()){
@@ -84,7 +83,7 @@ namespace VCAPI.Repository.MySQL
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@nameparam", info.name);
                 command.Parameters.AddWithValue("@componentTypeId", info.id);
-                command.Parameters.AddWithValue("@categoryID", info.categoryID);
+                command.Parameters.AddWithValue("@categoryId", info.categoryID);
                 command.Parameters.AddWithValue("@storageparam", info.storage);
                 command.Parameters.AddWithValue("@descriptionparam", info.description);
                 command.Parameters.AddWithValue("@userid", userId);

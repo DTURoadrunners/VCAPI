@@ -80,10 +80,10 @@ CREATE TABLE `projectRoles` (
 DROP VIEW IF EXISTS `projects`;
 CREATE view `projects` AS SELECT `projectStaticIds`.`ID`, `name` 
 FROM `projectStaticIds` join `projectJournal` ON `projectStaticIds`.`activeProjectId` = `projectJournal`.`projectID`;
-
+	
 CREATE TABLE `componentTypeJournal`(
     componentTypeID INT NOT NULL AUTO_INCREMENT,
-    `name`          VARCHAR(64) NOT NULL UNIQUE,
+    `name`          VARCHAR(64) NOT NULL,
     categoryID      INT NOT NULL,
     `storage`       INT NOT NULL,
     `description`   VARCHAR(512) NOT NULL,

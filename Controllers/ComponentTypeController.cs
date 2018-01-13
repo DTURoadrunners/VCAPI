@@ -11,7 +11,7 @@ using System.Security.Claims;
 
 namespace VCAPI.Controllers
 {
-    [Route("api/project/{projectId}/[controller]")]
+    [Route("api/projects/{projectId}/[controller]")]
     public class ComponentTypeController : Controller
     {
         private readonly IComponentTypeRepository repository;
@@ -74,10 +74,11 @@ namespace VCAPI.Controllers
             {
                 return new BadRequestObjectResult("Failed to create componenttype");
             }
-            return Created("api/project/" + projectId + "/componentType/", id);
+            return Created("api/project/" + projectId + "/componentType/" + id, null);
         }
 
         [Authorize]
+        [VerifyModelState]
         [HttpPut("{componentTypeId}")]
         public async Task<IActionResult> UpdateComponentType([FromRoute] int projectId, [FromRoute] int componentTypeId, [FromBody] ComponentTypeMarshallObject marshall)
         {
@@ -96,7 +97,8 @@ namespace VCAPI.Controllers
         }
 
         [Authorize]
-        [HttpPut("{componentTypeId}")]
+        [VerifyModelState]
+        [HttpDelete("{componentTypeId}")]
         public async Task<IActionResult> DeleteComponentType([FromRoute] int projectId, [FromRoute] int componentTypeId, [FromBody]string reason)
         {
             string userId = User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value;
@@ -114,7 +116,8 @@ namespace VCAPI.Controllers
         }
 
         [Authorize]
-        [HttpPut("{componentTypeId}")]
+        [VerifyModelState]
+        [HttpPut("{componentTypeId}/rollback")]
         public async Task<IActionResult> rollbackComponentType([FromRoute] int projectId, [FromRoute] int logId, [FromBody] string userId, [FromBody] string comment)
         {
             if (await resourceAccess.GetRankForProject(User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value, 0) < Repository.RANK.STUDENT)

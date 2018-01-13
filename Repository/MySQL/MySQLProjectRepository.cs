@@ -55,7 +55,7 @@ namespace VCAPI.Repository.MySQL
         {
             using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
-                command.CommandText = "select name from projects where ID = @id";
+                command.CommandText = "select name from projects where ID = @id;";
                 command.Parameters.Add("@id", MySqlDbType.Int64).Value = id;
                 command.Prepare();
                 using(DbDataReader reader = await command.ExecuteReaderAsync())

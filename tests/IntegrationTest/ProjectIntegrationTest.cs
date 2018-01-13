@@ -13,6 +13,7 @@ using Newtonsoft.Json.Linq;
 using VCAPI.Repository.Models;
 using System.Net;
 using VCAPI.Controllers;
+using static VCAPI.Controllers.ComponentTypeController;
 
 namespace tests.IntegrationTest
 {
@@ -119,7 +120,7 @@ namespace tests.IntegrationTest
             Assert.NotNull(response.Headers.Location);
 
             int createdId = GetCreatedId(response.Headers.Location.ToString());
-            Assert.True(createdId >= 0);
+            Assert.True(createdId > 0);
             
             return createdId;
         }
@@ -196,12 +197,165 @@ namespace tests.IntegrationTest
         [Fact]
         public async void CheckComponentTypeEndpointCRUD()
         {
+            const string updatedLabel = "Updated component type"; 
+            ComponentTypeInfo componentType = new ComponentTypeInfo(0, "Test Component", 1, 1, "Test Component");
+            int componentTypeId = await CreateNewComponentType(componentType);
+            componentType.name = updatedLabel;
+            await UpdateComponentType(componentTypeId, componentType);
+            ComponentTypeInfo updatedComponent = await GetComponentType(componentTypeId);
+            Assert.Equal(updatedLabel, updatedComponent.name);
+            await DeleteComponentType(componentTypeId);
+            ComponentTypeInfo expectedNull = await GetComponentType(componentTypeId);
+            Assert.Null(expectedNull);
+        }
+
+        private async Task<ComponentTypeInfo> GetComponentType(int componentTypeId)
+        {
             string jwtToken = await GetJWTToken(LoginCredentialProvider.GetSuperAdmin());
             SetAuthorization(client, jwtToken);
-            string strBody = "";
-            HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Post, "api/projects/1/componentType");
-            message.Content = new ByteArrayContent(Encoding.UTF8.GetBytes(strBody));
-            message.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Get, "api/projects/1/componentType/" + componentTypeId);
+            HttpResponseMessage response = await client.SendAsync(message);
+            if(response.StatusCode == HttpStatusCode.OK)
+            {
+                string content = await response.Content.ReadAsStringAsync();
+                return JsonConvert.DeserializeObject<ComponentTypeInfo>(content);
+            }
+            else
+            {
+                return null;
+            }
         }
+
+        private async Task<bool> DeleteComponentType(int idToDelete)
+        {
+            string jwtToken = await GetJWTToken(LoginCredentialProvider.GetSuperAdmin());
+            SetAuthorization(client, jwtToken);
+            HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Delete, "api/projects/1/componentType/" + idToDelete);
+            string reason = "deleted test component";
+            message.Content = new ByteArrayContent(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(reason)));
+            message.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            HttpResponseMessage response = await client.SendAsync(message);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            return true;
+        }
+
+        private async Task<bool> UpdateComponentType(int idToUpdate, ComponentTypeInfo newObject)
+        {
+            string jwtToken = await GetJWTToken(LoginCredentialProvider.GetSuperAdmin());
+            SetAuthorization(client, jwtToken);
+            HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Put, "api/projects/1/componentType/" + idToUpdate);
+            ComponentTypeMarshallObject marshall = new ComponentTypeMarshallObject()
+            {
+                model = newObject,
+                comment = "Update project"
+            };
+            message.Content = new ByteArrayContent(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(marshall)));
+            message.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            HttpResponseMessage response = await client.SendAsync(message);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            return true;
+        }
+
+        private async Task<int> CreateNewComponentType(ComponentTypeInfo newObject)
+        {
+            string jwtToken = await GetJWTToken(LoginCredentialProvider.GetSuperAdmin());
+            SetAuthorization(client, jwtToken);
+            HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Post, "api/projects/1/componentType");
+            ComponentTypeMarshallObject marshall = new ComponentTypeMarshallObject(){
+                model = newObject,
+                comment = "Test Project"
+            };
+            message.Content = new ByteArrayContent(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(marshall)));
+            message.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            HttpResponseMessage response = await client.SendAsync(message);
+            Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+            int createdId = GetCreatedId(response.Headers.Location.ToString());
+            Assert.True(createdId > 0);
+            
+            return createdId;
+        }
+
+        [Fact]
+        public async void CheckComponentEndpointCRUD()
+        {
+            ComponentInfo componentType = new ComponentInfo(0, "In use", "Test Component");
+            int componentId = await CreateComponent(componentType);
+            Assert.True(componentId > 0);
+            componentType.status = "Test update";
+            await UpdateComponent(componentId, componentType);
+            ComponentInfo updatedComponentType = await GetComponent(componentId);
+            Assert.Equal(updatedComponentType.comment, componentType.comment);
+            Assert.Equal(updatedComponentType.status, componentType.status);
+            Assert.Equal(updatedComponentType.id, componentId);
+            await DeleteComponent(componentId);
+            ComponentInfo expectedNull = await GetComponent(componentId);
+            Assert.Null(expectedNull);
+        }
+
+        private async Task<int> CreateComponent(ComponentInfo info)
+        {
+            string jwtToken = await GetJWTToken(LoginCredentialProvider.GetSuperAdmin());
+            SetAuthorization(client, jwtToken);
+            ComponentController.ComponentMarshallObject content = new ComponentController.ComponentMarshallObject(){
+                model = info,
+                comment = "Create test object"
+            };
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "api/projects/1/componentType/1/component");
+            request.Content = new ByteArrayContent(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(content)));
+            request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            HttpResponseMessage response = await client.SendAsync(request);
+            Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+            return GetCreatedId(response.Headers.Location.ToString());
+        }
+
+        private async Task<bool> UpdateComponent(int IdToUpdate, ComponentInfo newInfo)
+        {
+            string jwtToken = await GetJWTToken(LoginCredentialProvider.GetSuperAdmin());
+            SetAuthorization(client, jwtToken);
+            ComponentController.ComponentMarshallObject content = new ComponentController.ComponentMarshallObject(){
+                model = newInfo,
+                comment = "Update test object"
+            };
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Put, "api/projects/1/componentType/1/component/" + IdToUpdate);
+            request.Content = new ByteArrayContent(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(content)));
+            request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            
+            HttpResponseMessage response = await client.SendAsync(request);
+            
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            return true;
+        }
+
+        private async Task<ComponentInfo> GetComponent(int idToUpdate)
+        {
+            string jwtToken = await GetJWTToken(LoginCredentialProvider.GetSuperAdmin());
+            SetAuthorization(client, jwtToken);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, "api/projects/1/componentType/1/component/" + idToUpdate);
+            
+            HttpResponseMessage response = await client.SendAsync(request);
+            if(response.StatusCode == HttpStatusCode.OK)
+            {
+                byte[] reply = await response.Content.ReadAsByteArrayAsync();
+                return JsonConvert.DeserializeObject<ComponentInfo>(Encoding.UTF8.GetString(reply));
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        private async Task<bool> DeleteComponent(int idToDelete)
+        {
+            string jwtToken = await GetJWTToken(LoginCredentialProvider.GetSuperAdmin());
+            SetAuthorization(client, jwtToken);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, "api/projects/1/componentType/1/component/" + idToDelete);
+            string reason = "deleted test component";
+            request.Content = new ByteArrayContent(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(reason)));
+            request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            HttpResponseMessage response = await client.SendAsync(request);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            return true;
+        }
+
     }
 }
