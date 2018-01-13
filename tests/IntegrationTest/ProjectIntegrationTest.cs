@@ -148,12 +148,33 @@ namespace tests.IntegrationTest
 
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, "api/projects/"+id);
             HttpResponseMessage response = await client.SendAsync(request);
-            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-            
-            byte[] data = await response.Content.ReadAsByteArrayAsync();
-            string strData = Encoding.UTF8.GetString(data);
-            return JsonConvert.DeserializeObject<ProjectInfo>(strData);
+
+            if(response.StatusCode == HttpStatusCode.OK)
+            {
+                byte[] data = await response.Content.ReadAsByteArrayAsync();
+                string strData = Encoding.UTF8.GetString(data);
+                return JsonConvert.DeserializeObject<ProjectInfo>(strData);
+            }
+            else
+            {
+                return null;
+            }
         }
+
+        private async Task<bool> DeleteProject(int projectId)
+        {
+            string jwtToken = await GetJWTToken(LoginCredentialProvider.GetSuperAdmin());
+            SetAuthorization(client, jwtToken);
+
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, "api/project/" + projectId);
+            string reason = "Deleted test proejct";
+            request.Content = new ByteArrayContent(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(reason)));
+            request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            HttpResponseMessage response = await client.SendAsync(request);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            return true;
+        }   
 
         [Fact]
         public async void CheckProjectEndpointCRUD()
@@ -166,6 +187,10 @@ namespace tests.IntegrationTest
             await TestUpdateProject(newProject);
             ProjectInfo info = await TestGetProject(createdId);
             Assert.Equal(newProject.name, info.name);
+            Assert.Equal(info.id, createdId);
+
+            await DeleteProject(createdId);
+            Assert.Null(await TestGetProject(createdId));
         }
 
         [Fact]
@@ -177,12 +202,6 @@ namespace tests.IntegrationTest
             HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Post, "api/projects/1/componentType");
             message.Content = new ByteArrayContent(Encoding.UTF8.GetBytes(strBody));
             message.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-        }
-
-        [Fact]
-        public async void CheckComponentEndpointCRUD()
-        {
-
         }
     }
 }

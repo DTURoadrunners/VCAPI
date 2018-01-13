@@ -14,6 +14,6 @@ namespace VCAPI.Repository.Interfaces
          Task<ProjectInfo> GetProject(int id);
          Task<List<ProjectInfo>> GetProjects();
          Task<bool> UpdateProject(ProjectInfo inf, int id, string userId, string comment);
-         Task<bool> RollbackProject(int id, string userId, string comment);
+         Task<bool> RollbackProject(int projectId, int revisionId, string userId, string comment);
     }
 }

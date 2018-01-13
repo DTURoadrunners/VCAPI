@@ -50,7 +50,7 @@ namespace VCAPI.MockRepository
             return new List<ProjectInfo>(repository);
         }
 
-        public Task<bool> RollbackProject(int id, string userId, string comment)
+        public Task<bool> RollbackProject(int id, int revisionId, string userId, string comment)
         {
             throw new System.NotImplementedException();
         }
