@@ -65,7 +65,7 @@ namespace VCAPI.Controllers
             {
                 return new BadRequestObjectResult("Failed to create component");
             }
-            return Created("api/project/" + projectId + "/componentType/" + componentTypeId + "/document/", id);
+            return Created("api/project/" + projectId + "/componentType/" + componentTypeId + "/document/" + id, null);
         }
 
         [Authorize]

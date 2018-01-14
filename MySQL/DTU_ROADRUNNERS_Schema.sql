@@ -80,7 +80,10 @@ CREATE TABLE `projectRoles` (
 DROP VIEW IF EXISTS `projects`;
 CREATE view `projects` AS SELECT `projectStaticIds`.`ID`, `name` 
 FROM `projectStaticIds` join `projectJournal` ON `projectStaticIds`.`activeProjectId` = `projectJournal`.`projectID`;
-	
+
+DROP VIEW IF EXISTS `projectRevisions`;
+CREATE view `projectRevisions` AS SELECT `revisionNumber`, `projectId`, `userID`, `comment`, `type`, `timestamp` FROM projectLog ORDER BY `timestamp` DESC;
+
 CREATE TABLE `componentTypeJournal`(
     componentTypeID INT NOT NULL AUTO_INCREMENT,
     `name`          VARCHAR(64) NOT NULL,

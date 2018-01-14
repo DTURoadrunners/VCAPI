@@ -269,8 +269,9 @@ BEGIN
 	COMMIT;
 END$$
 
+DELIMITER $$
 DROP PROCEDURE rollbackProject$$
-CREATE PROCEDURE `rollbackProject`(IN logID int, IN userID int, IN commentparam VARCHAR(512))
+CREATE PROCEDURE `rollbackProject`(IN projectId int, IN revisionId int, IN userID VARCHAR(128), IN commentparam VARCHAR(512))
 BEGIN
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
 	    BEGIN
@@ -279,14 +280,14 @@ BEGIN
 	    END;
 
 	START TRANSACTION;
-		select projectId into @staticId from projectLog where projectLog.revisionNumber = logID;
-		select activeProjectId into @oldProjectID from projectStaticIds where ID = @staticId;
-		select affectedJournalEntry into @newActiveId from projectLog where projectLog.projectLogID = logID;
+		select projectId into @staticId from projectLog where projectLog.revisionNumber = revisionId;
+		select activeProjectId into @oldProjectID from projectStaticIds where ID = projectId;
+		select affectedJournalEntry into @newActiveId from projectLog where projectLog.revisionNumber = revisionId;
 
-		update projectStaticIds set activeProjectId = @newActiveId where activeProprojectStaticIdsjects.ID=@staticId;
+		update projectStaticIds set activeProjectId = @newActiveId where projectStaticIds.ID=projectId;
 		
 		INSERT INTO projectLog
-			VALUES (null, @staticId, @oldProjectID, userID, UNIX_TIMESTAMP(NOW()), commentparam, 'rollback'); 
+			VALUES (null, projectId, @oldProjectID, userID, UNIX_TIMESTAMP(NOW()), commentparam, 'rollback'); 
 	COMMIT;
 END$$
 

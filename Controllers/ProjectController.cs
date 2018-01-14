@@ -113,7 +113,14 @@ namespace VCAPI.Controllers
             public int revision;
         }
 
-        [HttpPost("{projectId}/rollback")]
+        [HttpGet("{projectId}/revisions")]
+        public async Task<IActionResult> getRevisions([FromRoute]int projectId)
+        {
+            RevisionInfo[] revisions = await repository.GetRevisions(projectId);
+            return Ok(revisions);
+        }
+
+        [HttpPut("{projectId}/rollback")]
         [Authorize]
         public async Task<IActionResult> rollbackProject([FromRoute] int projectId, [FromBody]RollbackProjectMarshallObject marshall)
         {

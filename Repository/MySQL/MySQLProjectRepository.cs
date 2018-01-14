@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using VCAPI.Repository.Interfaces;
 using VCAPI.Repository.Models;
@@ -41,13 +40,13 @@ namespace VCAPI.Repository.MySQL
         {
              using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
-                command.CommandText = "deleteDocument";
+                command.CommandText = "deleteProject";
                 command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@activeProjectID", id);
+                command.Parameters.AddWithValue("@projectId", id);
                 command.Parameters.AddWithValue("@userid", userId);
-                command.Parameters.AddWithValue("@commentparam", comment);
-               
-               return await command.ExecuteNonQueryAsync() == 1;
+                command.Parameters.AddWithValue("@commentParam", comment);
+               await command.ExecuteNonQueryAsync();
+               return true;
             }
         }
 
@@ -116,7 +115,8 @@ namespace VCAPI.Repository.MySQL
                 MySqlCommand command = conn.Get().CreateCommand();
                 command.CommandText = "rollbackProject";
                 command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@logID", id);
+                command.Parameters.AddWithValue("@revisionId", revisionId);
+                command.Parameters.AddWithValue("@projectId", id);
                 command.Parameters.AddWithValue("@userID", userId);
                 command.Parameters.AddWithValue("@commentParam", comment);
 
@@ -124,7 +124,34 @@ namespace VCAPI.Repository.MySQL
 
                 return true;
             }
+        }    
+        public async Task<RevisionInfo[]> GetRevisions(int projectId)
+        {
+            using(Connection conn = await connection.Create())
+            {
+                MySqlCommand command = conn.Get().CreateCommand();
+                command.CommandText = "select `revisionNumber`, `userID`, `type`, `comment`, `timestamp` from projectRevisions where `projectId` = @projectId;";
+                command.Parameters.AddWithValue("@projectId", projectId);
+                command.Prepare();
+                using(DbDataReader reader =  await command.ExecuteReaderAsync())
+                {
+                    List<RevisionInfo> revisions = new List<RevisionInfo>();
+                    while(await reader.ReadAsync())
+                    {
+                        revisions.Add(new RevisionInfo(){
+                            revisonId = reader.GetInt32(0),
+                            author = reader.GetString(1),
+                            eventType = reader.GetString(2),
+                            comment = reader.GetString(3),
+                            timestamp = reader.GetInt32(4)
+                        });
+                    }
+                    return revisions.ToArray();
+                }
+            }
         }
+
+     
 
     }
 }

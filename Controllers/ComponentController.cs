@@ -112,10 +112,17 @@ namespace VCAPI.Controllers
             return Ok();
         }
 
+        [HttpGet("{componentId}/revisions")]
+        public async Task<IActionResult> getRevisions([FromRoute] int projectId)
+        {
+            return BadRequest();
+        }
+
         [Authorize]
         [HttpPost("{componentId}/rollback")]
-        public async Task<IActionResult> rollbackComponent([FromRoute] int projectId, [FromRoute] int logId, [FromBody] string userId, [FromBody] string comment)
+        public async Task<IActionResult> rollbackComponent([FromRoute] int projectId, [FromRoute] int logId, [FromBody] string comment)
         {
+            string userId = User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value;
             if (await resourceAccess.GetRankForProject(User.Identity.Name, projectId) < Repository.RANK.STUDENT)
             {
                 return Unauthorized();

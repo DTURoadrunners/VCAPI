@@ -167,7 +167,7 @@ namespace tests.IntegrationTest
             string jwtToken = await GetJWTToken(LoginCredentialProvider.GetSuperAdmin());
             SetAuthorization(client, jwtToken);
 
-            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, "api/project/" + projectId);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, "api/projects/" + projectId);
             string reason = "Deleted test proejct";
             request.Content = new ByteArrayContent(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(reason)));
             request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
@@ -176,11 +176,40 @@ namespace tests.IntegrationTest
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             return true;
         }   
+        
+        private async Task<RevisionInfo[]> GetProjectRevisions(int projectId)
+        {
+            string jwtToken = await GetJWTToken(LoginCredentialProvider.GetSuperAdmin());
+            SetAuthorization(client, jwtToken);
 
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, "api/projects/" + projectId + "/revisions");
+            HttpResponseMessage response = await client.SendAsync(request);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            RevisionInfo[] revisons = JsonConvert.DeserializeObject<RevisionInfo[]>(await response.Content.ReadAsStringAsync());
+            return revisons;
+        }
+
+        private async Task<bool> RollbackProjectRevision(int projectId, int revision)
+        {
+            ProjectController.RollbackProjectMarshallObject marshallObject = new ProjectController.RollbackProjectMarshallObject()
+            {
+                comment = "Test rollback",
+                revision = revision
+            };
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Put, "api/projects/" + projectId + "/rollback");
+            request.Content = new ByteArrayContent(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(marshallObject)));
+            request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            
+            HttpResponseMessage response = await client.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+            return true;
+        }
+        
         [Fact]
         public async void CheckProjectEndpointCRUD()
         {
-            ProjectInfo newProject = new ProjectInfo(0, "TestProject1");
+            const string originalName = "TestProject1";
+            ProjectInfo newProject = new ProjectInfo(0, originalName);
             
             int createdId = await TestCreateProject(newProject);
             newProject.id = createdId;
@@ -192,6 +221,15 @@ namespace tests.IntegrationTest
 
             await DeleteProject(createdId);
             Assert.Null(await TestGetProject(createdId));
+
+            RevisionInfo[] revisons = await GetProjectRevisions(createdId);
+            Assert.Equal("created", revisons[2].eventType);
+            await RollbackProjectRevision(createdId, revisons[2].revisonId);
+            info = await TestGetProject(createdId);
+            Assert.NotNull(info);
+            Assert.Equal(originalName.ToLower(), info.name);
+            revisons = await GetProjectRevisions(createdId);
+            Assert.Equal("rollback", revisons[0].eventType);
         }
 
         [Fact]
