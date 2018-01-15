@@ -73,13 +73,13 @@ namespace VCAPI.Repository.MySQL
             }
         }
 
-        public async Task<List<ComponentInfo>> GetComponents(int componentTypeId)
+        public async Task<List<ComponentInfo>> GetComponents(int componentId)
         {
             using (Connection conn = await connector.Create())
             {
                 MySqlCommand command = conn.Get().CreateCommand();
                 command.CommandText = "select ID, status, command as description from components where typeID = @ID;";
-                command.Parameters.Add("@ID", DbType.Int32).Value = componentTypeId;
+                command.Parameters.Add("@ID", DbType.Int32).Value = componentId;
                 command.Prepare();
                 DbDataReader reader = await command.ExecuteReaderAsync();
                 List<ComponentInfo> list = new List<ComponentInfo>();
@@ -91,17 +91,44 @@ namespace VCAPI.Repository.MySQL
             }
         }
 
-        public async Task<bool> RollbackComponent(int logId, string userId, string comment)
+        public async Task<RevisionInfo[]> GetRevisions(int componentId)
+        {
+            using(Connection conn = await connector.Create())
+            {
+                MySqlCommand command = conn.Get().CreateCommand();
+                command.CommandText = "select `revisionNumber`, `userID`, `type`, `comment`, `timestamp` from componentsRevisions where `staticComponentId` = @componentTypeId;";
+                command.Parameters.AddWithValue("@componentTypeId", componentId);
+                command.Prepare();
+                using(DbDataReader reader =  await command.ExecuteReaderAsync())
+                {
+                    List<RevisionInfo> revisions = new List<RevisionInfo>();
+                    while(await reader.ReadAsync())
+                    {
+                        revisions.Add(new RevisionInfo(){
+                            revisonId = reader.GetInt32(0),
+                            author = reader.GetString(1),
+                            eventType = reader.GetString(2),
+                            comment = reader.GetString(3),
+                            timestamp = reader.GetInt32(4)
+                        });
+                    }
+                    return revisions.ToArray();
+                }
+            }
+        }
+
+        public async Task<bool> RollbackComponent(int projectId, int revisionId, string userId, string comment)
         {
             using (Connection conn = await connector.Create())
             {
                 MySqlCommand command = conn.Get().CreateCommand();
                 command.CommandText = "rollbackComponent";
                 command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@logID", logId);
+                command.Parameters.AddWithValue("@revisionID", revisionId);
                 command.Parameters.AddWithValue("@userid", userId);
-                command.Parameters.AddWithValue("@ommentparam", comment);
-                return await command.ExecuteNonQueryAsync() == 1;
+                command.Parameters.AddWithValue("@commentparam", comment);
+                await command.ExecuteNonQueryAsync();
+                return true;
             }
         }
 

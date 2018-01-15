@@ -14,7 +14,13 @@ namespace VCAPI.Controllers
     {
         private readonly IDocumentRepository repository;
         private readonly IResourceAccess resourceAccess;
-
+        private string authorizedUser
+        {
+            get
+            {
+                return User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value;
+            }
+        }
         public DocumentController(IDocumentRepository repository, IResourceAccess resourceAccess)
         {
             this.repository = repository;
@@ -102,18 +108,27 @@ namespace VCAPI.Controllers
             return Ok();
         }
 
+
+        [Authorize]
+        [HttpGet("{documentId}/revisions")]
+        public async Task<IActionResult> getRevisions([FromRoute]int documentId)
+        {
+            RevisionInfo[] revisions = await repository.GetRevisionsAsync(documentId);
+            return Ok(revisions);
+        }
+        
         [Authorize]
         [HttpPut("{documentId}")]
-        public async Task<IActionResult> rollbackDocument([FromRoute] int projectId, [FromRoute] int logId, [FromBody] string userId, [FromBody] string comment)
+        public async Task<IActionResult> rollbackDocument([FromRoute] int projectId, [FromBody] RollbackProjectMarshallObject marshall)
         {
-            if (await resourceAccess.GetRankForProject(User.Identity.Name, projectId) < Repository.RANK.STUDENT)
+            if (await resourceAccess.GetRankForProject(authorizedUser, projectId) < Repository.RANK.STUDENT)
             {
                 return Unauthorized();
             }
 
-            if (!await repository.RollbackDocument(logId, userId, comment))
+            if (!await repository.RollbackDocument(marshall.revision, authorizedUser, marshall.comment))
             {
-                return new BadRequestObjectResult("Failed to rollback log: " + logId);
+                return new BadRequestObjectResult("Failed to rollback log: " + marshall.revision);
             }
 
             return Ok();

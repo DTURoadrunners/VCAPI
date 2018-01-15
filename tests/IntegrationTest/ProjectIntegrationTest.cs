@@ -191,7 +191,7 @@ namespace tests.IntegrationTest
 
         private async Task<bool> RollbackProjectRevision(int projectId, int revision)
         {
-            ProjectController.RollbackProjectMarshallObject marshallObject = new ProjectController.RollbackProjectMarshallObject()
+            RollbackProjectMarshallObject marshallObject = new RollbackProjectMarshallObject()
             {
                 comment = "Test rollback",
                 revision = revision
@@ -245,6 +245,48 @@ namespace tests.IntegrationTest
             await DeleteComponentType(componentTypeId);
             ComponentTypeInfo expectedNull = await GetComponentType(componentTypeId);
             Assert.Null(expectedNull);
+            RevisionInfo[] revisions = await GetComponentTypeRevisions(componentTypeId);
+            Assert.Equal(3, revisions.Length);
+            Assert.Equal("deleted", revisions[0].eventType);
+            
+            await RollbackComponentType(componentTypeId, revisions[2].revisonId);
+            
+            revisions = await GetComponentTypeRevisions(componentTypeId);
+            Assert.Equal(4, revisions.Length);
+            Assert.Equal("rollback", revisions[0].eventType);
+
+            ComponentTypeInfo info = await GetComponentType(componentTypeId);
+            Assert.NotNull(info);
+        }
+
+        private async Task<RevisionInfo[]> GetComponentTypeRevisions(int componentTypeId)
+        {
+            string jwtToken = await GetJWTToken(LoginCredentialProvider.GetSuperAdmin());
+            SetAuthorization(client, jwtToken);
+            HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Get, "api/projects/1/componentType/" + componentTypeId + "/revisions");
+            HttpResponseMessage response = await client.SendAsync(message);
+            response.EnsureSuccessStatusCode();
+            return JsonConvert.DeserializeObject<RevisionInfo[]>(await response.Content.ReadAsStringAsync());
+        }
+
+        private async Task<bool> RollbackComponentType(int componentTypeId, int revisionId)
+        {
+            string jwtToken = await GetJWTToken(LoginCredentialProvider.GetSuperAdmin());
+            SetAuthorization(client, jwtToken);
+            HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Put, "api/projects/1/componentType/" + componentTypeId + "/rollback");
+            RollbackProjectMarshallObject rollbackObject = new RollbackProjectMarshallObject()
+            {
+                comment = "Test revert",
+                revision = revisionId
+            };
+            
+            message.Content = new ByteArrayContent(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(rollbackObject)));
+            message.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            HttpResponseMessage response = await client.SendAsync(message);
+
+            response.EnsureSuccessStatusCode();
+            return true;
         }
 
         private async Task<ComponentTypeInfo> GetComponentType(int componentTypeId)
@@ -316,7 +358,9 @@ namespace tests.IntegrationTest
         [Fact]
         public async void CheckComponentEndpointCRUD()
         {
-            ComponentInfo componentType = new ComponentInfo(0, "In use", "Test Component");
+            const string status = "in use";
+
+            ComponentInfo componentType = new ComponentInfo(0, status, "Test Component");
             int componentId = await CreateComponent(componentType);
             Assert.True(componentId > 0);
             componentType.status = "Test update";
@@ -328,6 +372,60 @@ namespace tests.IntegrationTest
             await DeleteComponent(componentId);
             ComponentInfo expectedNull = await GetComponent(componentId);
             Assert.Null(expectedNull);
+
+            RevisionInfo[] info = await GetComponentRevisions(componentId);
+            Assert.NotNull(info);
+
+            Assert.Equal(3, info.Length);
+            Assert.Equal("deleted", info[0].eventType);
+            Assert.Equal("created", info[2].eventType);
+
+            await RollbackComponent(componentId, info[2].revisonId);
+
+            info = await GetComponentRevisions(componentId);
+            Assert.Equal("rollback", info[0].eventType);
+
+            ComponentInfo expectedNotNull = await GetComponent(componentId);
+            Assert.NotNull(expectedNotNull);
+            Assert.Equal(status, expectedNotNull.status);
+        }
+
+        private async Task<RevisionInfo[]> GetComponentRevisions(int componentId)
+        {
+            string jwtToken = await GetJWTToken(LoginCredentialProvider.GetSuperAdmin());
+            SetAuthorization(client, jwtToken);
+
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, "api/projects/1/componentType/1/component/" + componentId + "/revisions");
+            HttpResponseMessage response = await client.SendAsync(request);
+            if(response.StatusCode == HttpStatusCode.OK)
+            {
+                RevisionInfo[]  revisions = JsonConvert.DeserializeObject<RevisionInfo[]>(await response.Content.ReadAsStringAsync());
+                return revisions;
+            }
+            else
+            {
+                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+                return null;
+            }
+        }
+
+        private async Task<bool> RollbackComponent(int componentId, int revision)
+        {
+            RollbackProjectMarshallObject rollbackObject = new RollbackProjectMarshallObject(){
+                comment = "Rollback tetst",
+                revision = revision
+            };
+
+            string jwtToken = await GetJWTToken(LoginCredentialProvider.GetSuperAdmin());
+            SetAuthorization(client, jwtToken);
+
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Put, "api/projects/1/componentType/1/component/" + componentId + "/rollback");
+            request.Content = new ByteArrayContent(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(rollbackObject)));
+            request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            HttpResponseMessage response = await client.SendAsync(request);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            return true;
         }
 
         private async Task<int> CreateComponent(ComponentInfo info)

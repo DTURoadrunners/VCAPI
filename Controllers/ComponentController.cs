@@ -113,24 +113,24 @@ namespace VCAPI.Controllers
         }
 
         [HttpGet("{componentId}/revisions")]
-        public async Task<IActionResult> getRevisions([FromRoute] int projectId)
+        public async Task<IActionResult> getRevisions([FromRoute] int componentId)
         {
-            return BadRequest();
+            RevisionInfo[] revision = await repository.GetRevisions(componentId);
+            return Ok(revision);
         }
 
         [Authorize]
-        [HttpPost("{componentId}/rollback")]
-        public async Task<IActionResult> rollbackComponent([FromRoute] int projectId, [FromRoute] int logId, [FromBody] string comment)
+        [HttpPut("{componentId}/rollback")]
+        public async Task<IActionResult> rollbackComponent([FromRoute] int projectId, [FromRoute] int componentId, [FromBody] RollbackProjectMarshallObject marshall)
         {
             string userId = User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value;
-            if (await resourceAccess.GetRankForProject(User.Identity.Name, projectId) < Repository.RANK.STUDENT)
+            if (await resourceAccess.GetRankForProject(userId, projectId) < Repository.RANK.STUDENT)
             {
                 return Unauthorized();
             }
-
-            if (!await repository.RollbackComponent(logId, userId, comment))
+            if (!await repository.RollbackComponent(componentId, marshall.revision, userId, marshall.comment))
             {
-                return new BadRequestObjectResult("Failed to rollback log: " + logId);
+                return new BadRequestObjectResult("Failed to rollback log: " + marshall.revision);
             }
 
             return Ok();

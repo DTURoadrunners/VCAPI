@@ -207,8 +207,9 @@ BEGIN
 	COMMIT;
 END$$
 
+DELIMITER $$
 DROP PROCEDURE IF EXISTS rollbackComponent$$
-CREATE PROCEDURE `rollbackComponent`(IN revisionID INT, in userID int, in commentParam VARCHAR(512))
+CREATE PROCEDURE `rollbackComponent`(IN revisionID INT, in userID VARCHAR(128), in commentParam VARCHAR(512))
 BEGIN
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -227,8 +228,9 @@ BEGIN
 	COMMIT;
 END$$
 
+DELIMITER $$
 DROP PROCEDURE rollbackComponentType$$
-CREATE PROCEDURE `rollbackComponentType`(in revisionId int, in userID int, in commentParam VARCHAR(512))
+CREATE PROCEDURE `rollbackComponentType`(in revisionId int, in userID VARCHAR(128), in commentParam VARCHAR(512))
 BEGIN
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -239,12 +241,12 @@ BEGIN
 	START TRANSACTION;
 		select componentTypeID into @staticId from componentTypeLog where revision = revisionId;
 		select activeComponentID into @oldComponentTypeID from componentTypeStaticId where ID = @staticId;
-		select affectedJournalEntry into @ID from componentTypeLog where componentTypeLogID = revisionId;
+		select affectedJournalEntry into @ID from componentTypeLog where revision = revisionId;
 
 		update componentTypeStaticId set activeComponentID = @ID where componentTypeStaticId.ID = @staticId;
 			
 		INSERT INTO componentTypeLog
-		VALUES (null, @oldComponentTypeID, @staticId, userID, UNIX_TIMESTAMP(NOW()), commentParam, 'rollback'); 
+		VALUES (null, @staticId, @oldComponentTypeID, userID, UNIX_TIMESTAMP(NOW()), commentParam, 'rollback'); 
 	COMMIT;
 END$$
 

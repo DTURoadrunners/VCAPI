@@ -114,20 +114,35 @@ namespace VCAPI.Controllers
 
             return Ok();
         }
+        
+        [Authorize]
+        [HttpGet("{componentTypeid}/revisions")]
+        public async Task<IActionResult> getRevisions([FromRoute]int projectId, [FromRoute]int componentTypeId)
+        {
+            string userId = User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value;
+            if (await resourceAccess.GetRankForProject(userId, 0) < Repository.RANK.STUDENT)
+            {
+                return Unauthorized();
+            }
+            
+            RevisionInfo[] revisions = await repository.GetRevisionAsync(componentTypeId);
+            return Ok(revisions);
+        }
 
         [Authorize]
         [VerifyModelState]
         [HttpPut("{componentTypeId}/rollback")]
-        public async Task<IActionResult> rollbackComponentType([FromRoute] int projectId, [FromRoute] int logId, [FromBody] string userId, [FromBody] string comment)
+        public async Task<IActionResult> rollbackComponentType([FromRoute] int projectId, [FromRoute] int componentTypeId, [FromBody]RollbackProjectMarshallObject rollback)
         {
-            if (await resourceAccess.GetRankForProject(User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value, 0) < Repository.RANK.STUDENT)
+            string userId = User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value;
+            if (await resourceAccess.GetRankForProject(userId, 0) < Repository.RANK.STUDENT)
             {
                 return Unauthorized();
             }
 
-            if (!await repository.RollbackComponentType(logId, userId, comment))
+            if (!await repository.RollbackComponentType(projectId, rollback.revision, userId, rollback.comment))
             {
-                return new BadRequestObjectResult("Failed to rollback log: " + logId);
+                return new BadRequestObjectResult("Failed to rollback log: " + rollback.revision);
             }
 
             return Ok();

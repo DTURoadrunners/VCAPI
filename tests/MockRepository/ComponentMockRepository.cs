@@ -63,5 +63,15 @@ namespace tests.MockRepository
         {
             throw new System.NotImplementedException();
         }
+
+        public Task<bool> RollbackComponent(int projectId, int revisionId, string userId, string comment)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public Task<RevisionInfo[]> GetRevisions(int componentTypeId)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }
