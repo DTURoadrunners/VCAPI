@@ -16,6 +16,13 @@ namespace VCAPI.Controllers
     {
         private readonly IProjectRepository repository;
         private readonly IResourceAccess resourceAccess;
+        private string authorizedUser
+        {
+            get
+            {
+                return User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value;
+            }
+        }
 
         public ProjectController(IProjectRepository repo, IResourceAccess access){
             repository = repo;
@@ -48,12 +55,11 @@ namespace VCAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> createProject([FromBody] CreateProjectMarshall request)
         { 
-            string username = User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value;
-            if(!await resourceAccess.IsSuperAdmin(username)){
+            if(!await resourceAccess.IsSuperAdmin(authorizedUser)){
                 return Unauthorized();
             }
             
-            int id = await repository.CreateProject(request.info.name, username, request.comment);
+            int id = await repository.CreateProject(request.info.name, authorizedUser, request.comment);
             if(id == -1){
                 return new BadRequestObjectResult("Failed to create project");
             }
@@ -78,13 +84,12 @@ namespace VCAPI.Controllers
         [HttpPut("{projectId}")]
         public async Task<IActionResult> updateProject([FromRoute] int projectId, [FromBody] CreateProjectMarshall marshall)
         {
-            string userName = User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value;
-            RANK rank = await resourceAccess.GetRankForProject(userName, projectId);
+            RANK rank = await resourceAccess.GetRankForProject(authorizedUser, projectId);
             if(rank < RANK.ADMIN){
                 return Unauthorized();
             }
 
-            if(!await repository.UpdateProject(marshall.info, projectId, userName, marshall.comment)){
+            if(!await repository.UpdateProject(marshall.info, projectId, authorizedUser, marshall.comment)){
                 return BadRequest("Did not change project");
             }
             return Ok();
@@ -92,13 +97,34 @@ namespace VCAPI.Controllers
 
         [HttpDelete("{projectId}")]
         [Authorize]
-        public async Task<IActionResult> deleteProject([FromRoute] int id, [FromBody] string reason)
+        public async Task<IActionResult> deleteProject([FromRoute] int projectId, [FromBody] string reason)
         {
-            if(!await resourceAccess.IsSuperAdmin(User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value))
+            if (!await resourceAccess.IsSuperAdmin(authorizedUser))
                 return Unauthorized();
-            if(!await repository.DeleteProject(id, User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value, reason)){
+            if(!await repository.DeleteProject(projectId, authorizedUser, reason)){
                 return BadRequest("Project was not deleted");
             }
+            return Ok();
+        }
+
+        public class RollbackProjectMarshallObject
+        {
+            public string comment;
+            public int revision;
+        }
+
+        [HttpPost("{projectId}/rollback")]
+        [Authorize]
+        public async Task<IActionResult> rollbackProject([FromRoute] int projectId, [FromBody]RollbackProjectMarshallObject marshall)
+        {
+            if (!await resourceAccess.IsSuperAdmin(authorizedUser))
+                return Unauthorized();
+
+            if (!await repository.RollbackProject(projectId, marshall.revision, authorizedUser, marshall.comment))
+            {
+                return BadRequest("Failed to rollback to revision");
+            }
+
             return Ok();
         }
     }

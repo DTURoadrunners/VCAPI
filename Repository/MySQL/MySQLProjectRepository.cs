@@ -110,7 +110,7 @@ namespace VCAPI.Repository.MySQL
             }
         }
 
-         public async Task<bool> RollbackProject(int id, string userId, string comment)
+         public async Task<bool> RollbackProject(int id, int revisionId, string userId, string comment)
         {
             using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
@@ -119,8 +119,10 @@ namespace VCAPI.Repository.MySQL
                 command.Parameters.AddWithValue("@logID", id);
                 command.Parameters.AddWithValue("@userID", userId);
                 command.Parameters.AddWithValue("@commentParam", comment);
-               
-               return await command.ExecuteNonQueryAsync() == 1;
+
+                await command.ExecuteNonQueryAsync();
+
+                return true;
             }
         }
 
