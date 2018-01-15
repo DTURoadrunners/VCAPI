@@ -8,9 +8,11 @@ using VCAPI.Repository.Models;
 using System.Linq;
 using System.Security.Claims;
 using VCAPI.Repository;
+using System.Web.Http.Cors;
 
 namespace VCAPI.Controllers
 {
+    [EnableCors(origins: "*", headers: "*", methods: "*")]
     [Route("api/projects/{projectId}/componentType/{componentTypeId}/[controller]")]
     public class ComponentController : Controller
     {

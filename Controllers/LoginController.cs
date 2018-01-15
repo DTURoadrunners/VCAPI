@@ -15,12 +15,15 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 using VCAPI.Options;
 using VCAPI.Repository.Models;
-using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+
 using Newtonsoft.Json.Linq;
+using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+using System.Web.Http.Cors;
 
 namespace VCAPI.Controllers
 {
     [Route("api/")]
+    [EnableCors(origins: "*", headers: "*", methods: "*")]
     public class LoginController : Controller
     {
         public struct RegisterCredentials
@@ -97,7 +100,7 @@ namespace VCAPI.Controllers
             return Ok("Hello, " + User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value);
         }
 
-        [HttpPut("login")]
+        [HttpPost("login")]
         public async  Task<IActionResult> Login([FromBody]LoginCredentials credentials)
         {
 

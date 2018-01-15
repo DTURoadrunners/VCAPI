@@ -29,6 +29,7 @@ namespace VCAPI
             services.AddMvc();
             services.AddOptions();
             services.AddSingleton<DatabaseConnector>(new DatabaseConnector(Configuration["ConnectionStrings:Connection"]));
+            services.AddCors();
             
 #region Database injections
             services.AddTransient<IUserRepository, MySQLUserRepository>();
@@ -72,6 +73,7 @@ namespace VCAPI
             app.UseAuthentication();
 
             app.UseMvc();
+            app.UseCors(builder => builder.WithOrigins("*").AllowAnyHeader().AllowAnyMethod());
         }
     }
 }

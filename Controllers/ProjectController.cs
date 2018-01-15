@@ -8,9 +8,11 @@ using VCAPI.Repository.Interfaces;
 using VCAPI.Repository.Models;
 using System.Linq;
 using System.Collections.Generic;
+using System.Web.Http.Cors;
 
 namespace VCAPI.Controllers
 {
+    [EnableCors(origins: "*", headers: "*", methods: "*")]
     [Route("api/projects")]
     public class ProjectController : Controller
     {

@@ -10,9 +10,11 @@ using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using VCAPI.Filters;
 using VCAPI.Repository;
+using System.Web.Http.Cors;
 
 namespace VCAPI.Controllers
 {
+    [EnableCors(origins: "*", headers: "*", methods: "*")]
     [Produces("application/json")]
     [Route("api/projects/{projectID}/UserPermissions")]
     public class UserController : Controller

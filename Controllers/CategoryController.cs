@@ -6,9 +6,11 @@ using VCAPI.Filters;
 using VCAPI.Repository.Interfaces;
 using VCAPI.Repository;
 using VCAPI.Repository.Models;
+using System.Web.Http.Cors;
 
 namespace VCAPI.Controllers
 {
+    [EnableCors(origins: "*", headers: "*", methods: "*")]
     [Route("api/project/{projectId}/componentType/{componentTypeId}/[controller]")]
     public class CategoryController : Controller
     {
