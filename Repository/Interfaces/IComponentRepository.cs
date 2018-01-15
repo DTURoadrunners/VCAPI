@@ -13,6 +13,7 @@ namespace VCAPI.Repository.Interfaces
         Task<List<ComponentInfo>> GetComponents(int id);
         Task<bool> UpdateComponent(int activeComponentTypeID, ComponentInfo component, string userid, string comment);
         Task<bool> DeleteComponent(int activeID, string userid, string comment);
-        Task<bool> RollbackComponent(int id, string userId, string comment);
+        Task<bool> RollbackComponent(int projectId, int revisionId, string userId, string comment);
+        Task<RevisionInfo[]> GetRevisions(int componentTypeId);
     }
 }

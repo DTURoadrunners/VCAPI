@@ -107,17 +107,43 @@ namespace VCAPI.Repository.MySQL
             }
         }
 
-        public async Task<bool> RollbackDocument(int id, string userId, string comment)
+        public async Task<bool> RollbackDocument(int revisionId, string userId, string comment)
         {
             using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
                 command.CommandText = "rollbackDocument";
                 command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@logID", id);
+                command.Parameters.AddWithValue("@logID", revisionId);
                 command.Parameters.AddWithValue("@userID", userId);
                 command.Parameters.AddWithValue("@commentParam", comment);
                
                return await command.ExecuteNonQueryAsync() == 1;
+            }
+        }
+
+        public async Task<RevisionInfo[]> GetRevisionsAsync(int documentId)
+        {
+            using(Connection conn = await connection.Create())
+            {
+                MySqlCommand command = conn.Get().CreateCommand();
+                command.CommandText = "select `revision`, `userID`, `type`, `comment`, `timestamp` from documentRevision where `staticDocumentId` = @documentId;";
+                command.Parameters.AddWithValue("@documentId", documentId);
+                command.Prepare();
+                using(DbDataReader reader =  await command.ExecuteReaderAsync())
+                {
+                    List<RevisionInfo> revisions = new List<RevisionInfo>();
+                    while(await reader.ReadAsync())
+                    {
+                        revisions.Add(new RevisionInfo(){
+                            revisonId = reader.GetInt32(0),
+                            author = reader.GetString(1),
+                            eventType = reader.GetString(2),
+                            comment = reader.GetString(3),
+                            timestamp = reader.GetInt32(4)
+                        });
+                    }
+                    return revisions.ToArray();
+                }
             }
         }
     }       

@@ -6,15 +6,26 @@ using VCAPI.Filters;
 using VCAPI.Repository.Interfaces;
 using VCAPI.Repository.Models;
 using VCAPI.Repository;
+using System.Linq;
+using System.Security.Claims;
+using System.Web.Http.Cors;
+using System.Web.Http.Cors;
 
 namespace VCAPI.Controllers
 {
+    [EnableCors(origins: "*", headers: "*", methods: "*")]
     [Route("api/project/{projectId}/componentType/{componentTypeId}/[controller]")]
     public class DocumentController : Controller
     {
         private readonly IDocumentRepository repository;
         private readonly IResourceAccess resourceAccess;
-
+        private string authorizedUser
+        {
+            get
+            {
+                return User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value;
+            }
+        }
         public DocumentController(IDocumentRepository repository, IResourceAccess resourceAccess)
         {
             this.repository = repository;
@@ -65,7 +76,7 @@ namespace VCAPI.Controllers
             {
                 return new BadRequestObjectResult("Failed to create component");
             }
-            return Created("api/project/" + projectId + "/componentType/" + componentTypeId + "/document/", id);
+            return Created("api/project/" + projectId + "/componentType/" + componentTypeId + "/document/" + id, null);
         }
 
         [Authorize]
@@ -102,18 +113,27 @@ namespace VCAPI.Controllers
             return Ok();
         }
 
+
+        [Authorize]
+        [HttpGet("{documentId}/revisions")]
+        public async Task<IActionResult> getRevisions([FromRoute]int documentId)
+        {
+            RevisionInfo[] revisions = await repository.GetRevisionsAsync(documentId);
+            return Ok(revisions);
+        }
+        
         [Authorize]
         [HttpPut("{documentId}")]
-        public async Task<IActionResult> rollbackDocument([FromRoute] int projectId, [FromRoute] int logId, [FromBody] string userId, [FromBody] string comment)
+        public async Task<IActionResult> rollbackDocument([FromRoute] int projectId, [FromBody] RollbackProjectMarshallObject marshall)
         {
-            if (await resourceAccess.GetRankForProject(User.Identity.Name, projectId) < Repository.RANK.STUDENT)
+            if (await resourceAccess.GetRankForProject(authorizedUser, projectId) < Repository.RANK.STUDENT)
             {
                 return Unauthorized();
             }
 
-            if (!await repository.RollbackDocument(logId, userId, comment))
+            if (!await repository.RollbackDocument(marshall.revision, authorizedUser, marshall.comment))
             {
-                return new BadRequestObjectResult("Failed to rollback log: " + logId);
+                return new BadRequestObjectResult("Failed to rollback log: " + marshall.revision);
             }
 
             return Ok();

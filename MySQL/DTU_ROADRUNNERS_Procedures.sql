@@ -14,12 +14,12 @@ BEGIN
     VALUES (LOWER(nameparam));
     SELECT LAST_INSERT_ID() as id;
 END$$
-
+DELIMITER $$
 DROP PROCEDURE IF EXISTS createComponent$$
 CREATE PROCEDURE `createComponent`(
 	IN componentTypeId INT,
-    IN _status VARCHAR(64),
-	IN _comment VARCHAR(512),
+    IN `status` VARCHAR(64),
+	IN `comment` VARCHAR(512),
     IN userID VARCHAR(32),
     IN logComment VARCHAR(512),
     OUT id int)
@@ -31,7 +31,7 @@ BEGIN
     END;
 
 	START TRANSACTION;
-		INSERT INTO componentJournal VALUES(NULL, componentTypeID ,_status, _comment);
+		INSERT INTO componentJournal VALUES(NULL, componentTypeID , `status`, `comment`);
 		SET @journalEntry = LAST_INSERT_ID();
         INSERT INTO componentStaticId VALUES(NULL, @journalEntry);
         SET id = LAST_INSERT_ID();
@@ -129,8 +129,7 @@ BEGIN
 	insert into user values(ID, firstnameparam, lastnameparam, phonenumberparam, passwordparam, 0);
 END$$
 
-
--- delete component
+DELIMITER $$
 DROP PROCEDURE IF EXISTS deleteComponent$$
 CREATE PROCEDURE `deleteComponent`(
 	IN ID INT,
@@ -145,15 +144,16 @@ BEGIN
 
 	START TRANSACTION;
 		SELECT activeComponentId into @oldID from componentStaticId where componentStaticId.ID = ID;
-        update componentStaticId set activeComponentId = NULL WHERE componentJournal.ID = ID;
-        INSERT INTO componentLog VALUES(NULL, @oldID, activeID, userID, UNIX_TIMESTAMP(NOW()), logComment, 'deleted');
+        update componentStaticId set activeComponentId = NULL WHERE componentStaticId.ID = ID;
+        INSERT INTO componentLog VALUES(NULL, @oldID, ID, userID, UNIX_TIMESTAMP(NOW()), logComment, 'deleted');
 	COMMIT;
 END$$
 
+DELIMITER $$
 -- delete component type
 DROP PROCEDURE IF EXISTS deleteComponenttype$$
 CREATE PROCEDURE `deleteComponenttype`(
-	IN componentTypeId INT(11), 
+	IN activeComponentTypeID INT(11), 
     IN userid VARCHAR(32), 
     IN commentparam VARCHAR(512))
 BEGIN
@@ -164,9 +164,9 @@ BEGIN
     END;
 
 	START TRANSACTION;
-        Select activeComponentID into @oldComponentTypeID from componentTypeStaticId where componentTypeStaticId.ID = componentTypeId;
-        update componentTypeStaticId set activeComponentID = null where componentTypeStaticId.ID = componentTypeId;
-        INSERT INTO componentTypeLog VALUES(NULL, @oldComponentTypeID, activeComponentTypeID, userID, UNIX_TIMESTAMP(NOW()), commentparam, 'deleted');
+        Select activeComponentID into @oldComponentTypeID from componentTypeStaticId where componentTypeStaticId.ID = activeComponentTypeID;
+        update componentTypeStaticId set activeComponentID = null where componentTypeStaticId.ID = activeComponentTypeID;
+        INSERT INTO componentTypeLog VALUES(NULL, activeComponentTypeID, @oldComponentTypeID, userID, UNIX_TIMESTAMP(NOW()), commentparam, 'deleted');
 	COMMIT;
 END$$
 
@@ -207,8 +207,9 @@ BEGIN
 	COMMIT;
 END$$
 
+DELIMITER $$
 DROP PROCEDURE IF EXISTS rollbackComponent$$
-CREATE PROCEDURE `rollbackComponent`(IN revisionID INT, in userID int, in commentParam VARCHAR(512))
+CREATE PROCEDURE `rollbackComponent`(IN revisionID INT, in userID VARCHAR(128), in commentParam VARCHAR(512))
 BEGIN
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -227,8 +228,9 @@ BEGIN
 	COMMIT;
 END$$
 
+DELIMITER $$
 DROP PROCEDURE rollbackComponentType$$
-CREATE PROCEDURE `rollbackComponentType`(in revisionId int, in userID int, in commentParam VARCHAR(512))
+CREATE PROCEDURE `rollbackComponentType`(in revisionId int, in userID VARCHAR(128), in commentParam VARCHAR(512))
 BEGIN
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -239,17 +241,17 @@ BEGIN
 	START TRANSACTION;
 		select componentTypeID into @staticId from componentTypeLog where revision = revisionId;
 		select activeComponentID into @oldComponentTypeID from componentTypeStaticId where ID = @staticId;
-		select affectedJournalEntry into @ID from componentTypeLog where componentTypeLogID = revisionId;
+		select affectedJournalEntry into @ID from componentTypeLog where revision = revisionId;
 
 		update componentTypeStaticId set activeComponentID = @ID where componentTypeStaticId.ID = @staticId;
 			
 		INSERT INTO componentTypeLog
-		VALUES (null, @oldComponentTypeID, @staticId, userID, UNIX_TIMESTAMP(NOW()), commentParam, 'rollback'); 
+		VALUES (null, @staticId, @oldComponentTypeID, userID, UNIX_TIMESTAMP(NOW()), commentParam, 'rollback'); 
 	COMMIT;
 END$$
 
 DROP PROCEDURE rollbackDocument$$
-CREATE PROCEDURE `rollbackDocument`(in logID int, in userID int, in commentParam VARCHAR(512), out err int)
+CREATE PROCEDURE `rollbackDocument`(in logID int, in userID int, in commentParam VARCHAR(512))
 BEGIN
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -269,8 +271,9 @@ BEGIN
 	COMMIT;
 END$$
 
+DELIMITER $$
 DROP PROCEDURE rollbackProject$$
-CREATE PROCEDURE `rollbackProject`(IN logID int, IN userID int, IN commentparam VARCHAR(512), out err int)
+CREATE PROCEDURE `rollbackProject`(IN projectId int, IN revisionId int, IN userID VARCHAR(128), IN commentparam VARCHAR(512))
 BEGIN
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
 	    BEGIN
@@ -279,26 +282,26 @@ BEGIN
 	    END;
 
 	START TRANSACTION;
-		select projectId into @staticId from projectLog where projectLog.revisionNumber = logID;
-		select activeProjectId into @oldProjectID from projectStaticIds where ID = @staticId;
-		select affectedJournalEntry into @newActiveId from projectLog where projectLog.projectLogID = logID;
+		select projectId into @staticId from projectLog where projectLog.revisionNumber = revisionId;
+		select activeProjectId into @oldProjectID from projectStaticIds where ID = projectId;
+		select affectedJournalEntry into @newActiveId from projectLog where projectLog.revisionNumber = revisionId;
 
-		update projectStaticIds set activeProjectId = @newActiveId where activeProprojectStaticIdsjects.ID=@staticId;
+		update projectStaticIds set activeProjectId = @newActiveId where projectStaticIds.ID=projectId;
 		
 		INSERT INTO projectLog
-			VALUES (null, @staticId, @oldProjectID, userID, UNIX_TIMESTAMP(NOW()), commentparam, 'rollback'); 
+			VALUES (null, projectId, @oldProjectID, userID, UNIX_TIMESTAMP(NOW()), commentparam, 'rollback'); 
 	COMMIT;
 END$$
 
+DELIMITER $$
 DROP PROCEDURE updateComponent$$
 CREATE PROCEDURE `updateComponent`(
 	IN componentId INT,
-    IN _status VARCHAR(64),
+    IN `status` VARCHAR(64),
 	IN associatedComponentType INT,
-	IN _comment VARCHAR(512),
+	IN `comment` VARCHAR(512),
     IN userID VARCHAR(32),
-    IN logComment VARCHAR(512),
-    out err int)
+    IN logComment VARCHAR(512))
 BEGIN
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -307,18 +310,18 @@ BEGIN
     END;
 
 	START TRANSACTION;
-		INSERT INTO componentJournal VALUES(NULL, associatedComponentType, _status, _comment);
+		INSERT INTO componentJournal VALUES(NULL, associatedComponentType, `status`, `comment`);
 		set @newEntry = last_insert_id();
         SELECT activeComponentId INTO @oldID from componentStaticId WHERE ID = componentId;
-        UPDATE componentStaticId SET activeComponent.activeComponentId = @newEntry WHERE activeComponent.ID = componentId;
+        UPDATE componentStaticId SET componentStaticId.activeComponentId = @newEntry WHERE componentStaticId.ID = componentId;
 		INSERT INTO componentLog VALUES(NULL, @oldID, componentId, userID, UNIX_TIMESTAMP(NOW()), logComment, 'updated');
 	COMMIT;
 END$$
-
+DELIMITER $$
 DROP PROCEDURE updateComponentType$$
 CREATE PROCEDURE `updateComponentType`(IN nameparam VARCHAR(64), IN componentTypeId int(11), IN categoryId int(11), 
 									   IN storageparam int(11), IN descriptionparam varchar(512), IN userid varchar(32), 
-									   IN commentparam varchar(512), OUT err int)
+									   IN commentparam varchar(512))
 BEGIN
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -328,10 +331,10 @@ BEGIN
 
 	START TRANSACTION;
 		INSERT INTO componentTypeJournal VALUES(NULL, nameparam, categoryId, storageparam, descriptionparam);
+        set @newEntry = LAST_INSERT_ID();
 		SELECT activeComponentID INTO @oldID from componentTypeStaticId WHERE ID = componentTypeId;
-		set @newEntry = LAST_INSERT_ID();
 		UPDATE componentTypeStaticId SET componentTypeStaticId.activeComponentID = @newEntry WHERE componentTypeStaticId.ID = componentTypeId;
-		INSERT INTO componentTypeLog VALUES(NULL, @newEntry, @oldID, userid, UNIX_TIMESTAMP(NOW()), commentparam, 'updated');
+		INSERT INTO componentTypeLog VALUES(NULL, componentTypeId, @oldID, userid, UNIX_TIMESTAMP(NOW()), commentparam, 'updated');
 	COMMIT;
 END$$
 

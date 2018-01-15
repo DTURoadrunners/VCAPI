@@ -8,9 +8,11 @@ using VCAPI.Repository.Models;
 using System.Linq;
 using System.Security.Claims;
 using VCAPI.Repository;
+using System.Web.Http.Cors;
 
 namespace VCAPI.Controllers
 {
+    [EnableCors(origins: "*", headers: "*", methods: "*")]
     [Route("api/projects/{projectId}/componentType/{componentTypeId}/[controller]")]
     public class ComponentController : Controller
     {
@@ -95,7 +97,7 @@ namespace VCAPI.Controllers
         }
 
         [Authorize]
-        [HttpPut("{componentId}")]
+        [HttpDelete("{componentId}")]
         public async Task<IActionResult> DeleteComponent([FromRoute] int projectId, [FromRoute] int componentId, [FromBody] string comment)
         {
             string userId = User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value;
@@ -112,18 +114,25 @@ namespace VCAPI.Controllers
             return Ok();
         }
 
-        [Authorize]
-        [HttpPut("{componentId}")]
-        public async Task<IActionResult> rollbackComponent([FromRoute] int projectId, [FromRoute] int logId, [FromBody] string userId, [FromBody] string comment)
+        [HttpGet("{componentId}/revisions")]
+        public async Task<IActionResult> getRevisions([FromRoute] int componentId)
         {
-            if (await resourceAccess.GetRankForProject(User.Identity.Name, projectId) < Repository.RANK.STUDENT)
+            RevisionInfo[] revision = await repository.GetRevisions(componentId);
+            return Ok(revision);
+        }
+
+        [Authorize]
+        [HttpPut("{componentId}/rollback")]
+        public async Task<IActionResult> rollbackComponent([FromRoute] int projectId, [FromRoute] int componentId, [FromBody] RollbackProjectMarshallObject marshall)
+        {
+            string userId = User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value;
+            if (await resourceAccess.GetRankForProject(userId, projectId) < Repository.RANK.STUDENT)
             {
                 return Unauthorized();
             }
-
-            if (!await repository.RollbackComponent(logId, userId, comment))
+            if (!await repository.RollbackComponent(componentId, marshall.revision, userId, marshall.comment))
             {
-                return new BadRequestObjectResult("Failed to rollback log: " + logId);
+                return new BadRequestObjectResult("Failed to rollback log: " + marshall.revision);
             }
 
             return Ok();

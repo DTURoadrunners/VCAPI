@@ -71,5 +71,10 @@ namespace VCAPI.MockRepository
             }
             return false;
         }
+
+        public Task<RevisionInfo[]> GetRevisions(int projectId)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

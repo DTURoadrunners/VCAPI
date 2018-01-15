@@ -45,10 +45,9 @@ namespace VCAPI.Repository.MySQL
         {
             using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
-                command.CommandText = "select ID, name, categoryID, storage, description from componentTypes where ID = @ID AND associatedProject = @projectId";
-                command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@ID", componentTypeId);
-                command.Parameters.AddWithValue("@projectId", projectId);
+                command.CommandText = "select ID, name, categoryID, storage, description from componentTypes where ID = @ID AND associatedProject = @projectId;";
+                command.Parameters.Add("@ID", DbType.Int32).Value = componentTypeId;
+                command.Parameters.Add("@projectId", DbType.Int32).Value = projectId;
                 command.Prepare();
                 DbDataReader reader = await command.ExecuteReaderAsync();
                 if(!await reader.ReadAsync()){
@@ -84,7 +83,7 @@ namespace VCAPI.Repository.MySQL
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@nameparam", info.name);
                 command.Parameters.AddWithValue("@componentTypeId", info.id);
-                command.Parameters.AddWithValue("@categoryID", info.categoryID);
+                command.Parameters.AddWithValue("@categoryId", info.categoryID);
                 command.Parameters.AddWithValue("@storageparam", info.storage);
                 command.Parameters.AddWithValue("@descriptionparam", info.description);
                 command.Parameters.AddWithValue("@userid", userId);
@@ -107,18 +106,45 @@ namespace VCAPI.Repository.MySQL
             }
         }
 
-        public async Task<bool> RollbackComponentType(int ID, string userId, string comment)
+        public async Task<RevisionInfo[]> GetRevisionAsync(int componentTypeId)
+        {
+            using(Connection conn = await connection.Create())
+            {
+                MySqlCommand command = conn.Get().CreateCommand();
+                command.CommandText = "select `revision`, `userID`, `type`, `comment`, `timestamp` from componentTypeRevision where `componentTypeID` = @componentType;";
+                command.Parameters.AddWithValue("@componentType", componentTypeId);
+                command.Prepare();
+                using(DbDataReader reader =  await command.ExecuteReaderAsync())
+                {
+                    List<RevisionInfo> revisions = new List<RevisionInfo>();
+                    while(await reader.ReadAsync())
+                    {
+                        revisions.Add(new RevisionInfo(){
+                            revisonId = reader.GetInt32(0),
+                            author = reader.GetString(1),
+                            eventType = reader.GetString(2),
+                            comment = reader.GetString(3),
+                            timestamp = reader.GetInt32(4)
+                        });
+                    }
+                    return revisions.ToArray();
+                }
+            }
+        }
+
+        public async Task<bool> RollbackComponentType(int projectId, int revisionId, string userId, string comment)
         {
             using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
                 command.CommandText = "rollbackComponenttype";
                 command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@logID", ID);
-                command.Parameters.AddWithValue("@userid", userId);
-                command.Parameters.AddWithValue("@commentparam", comment);
+                command.Parameters.AddWithValue("@revisionId", revisionId);
+                command.Parameters.AddWithValue("@userID", userId);
+                command.Parameters.AddWithValue("@commentParam", comment);
                
-               return await command.ExecuteNonQueryAsync() == 1;
-            }
+                await command.ExecuteNonQueryAsync();
+                return true;
+            }        
         }
     }       
 }

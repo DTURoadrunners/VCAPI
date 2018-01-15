@@ -81,9 +81,12 @@ DROP VIEW IF EXISTS `projects`;
 CREATE view `projects` AS SELECT `projectStaticIds`.`ID`, `name` 
 FROM `projectStaticIds` join `projectJournal` ON `projectStaticIds`.`activeProjectId` = `projectJournal`.`projectID`;
 
+DROP VIEW IF EXISTS `projectRevisions`;
+CREATE view `projectRevisions` AS SELECT `revisionNumber`, `projectId`, `userID`, `comment`, `type`, `timestamp` FROM projectLog ORDER BY `timestamp` DESC;
+
 CREATE TABLE `componentTypeJournal`(
     componentTypeID INT NOT NULL AUTO_INCREMENT,
-    `name`          VARCHAR(64) NOT NULL UNIQUE,
+    `name`          VARCHAR(64) NOT NULL,
     categoryID      INT NOT NULL,
     `storage`       INT NOT NULL,
     `description`   VARCHAR(512) NOT NULL,
@@ -118,6 +121,11 @@ DROP VIEW IF EXISTS `componentTypes`;
 CREATE view `componentTypes` AS SELECT `ID`, `associatedProject`, `name`, `categoryID`, `storage`, `description` 
 FROM `componentTypeStaticId` join `componentTypeJournal` ON `componentTypeStaticId`.`activeComponentID` = `componentTypeJournal`.`componentTypeID`;
 
+
+DROP VIEW IF EXISTS `componentTypeRevision`;
+CREATE view `componentTypeRevision` AS SELECT `revision`, `componentTypeID`, `userID`, `comment`, `type`, `timestamp` FROM componentTypeLog ORDER BY `timestamp` DESC;
+
+
 CREATE TABLE `componentJournal` (
     componentID         INT NOT NULL AUTO_INCREMENT,
     typeID              INT NOT NULL,
@@ -150,6 +158,11 @@ CREATE TABLE `componentLog` (
 DROP VIEW IF EXISTS `components`;
 CREATE view `components` AS SELECT 'ID', `typeID`, `status`, `comment` 
 FROM `componentStaticId` join `componentJournal` ON `componentStaticId`.`activeComponentId` = componentJournal.componentID;
+
+
+DROP VIEW IF EXISTS `componentsRevisions`;
+CREATE view `componentsRevisions` AS SELECT `componentLogID` as revisionNumber, `activeComponentID` as `staticComponentId`, `userID`, `comment`, `type`, `timestamp` FROM componentLog ORDER BY `timestamp` DESC;
+
 
 CREATE TABLE `documentJournal`(
     documentID              INT NOT NULL AUTO_INCREMENT,
@@ -185,6 +198,10 @@ CREATE TABLE `documentLog` (
 DROP VIEW IF EXISTS `documents`;
 CREATE view `documents` AS SELECT 'ID', `bucketpath`, `filename`, `description` 
 FROM `documentStaticId` join `documentJournal` ON `documentStaticId`.`activeDocumentID` = `documentJournal`.`documentID`;
+
+
+DROP VIEW IF EXISTS `documentRevision`;
+CREATE view `documentRevision` AS SELECT `documentLogID` as `revision`, `activeDocumentID` as staticDocumentId, `userID`, `comment`, `type`, `timestamp` FROM documentLog ORDER BY `timestamp` DESC;
 
 insert into role VALUES(NULL, 'PROHIBITED');
 insert into role VALUES(NULL, 'GUEST');

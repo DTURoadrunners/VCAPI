@@ -8,9 +8,11 @@ using VCAPI.Repository.Interfaces;
 using VCAPI.Repository.Models;
 using System.Linq;
 using System.Collections.Generic;
+using System.Web.Http.Cors;
 
 namespace VCAPI.Controllers
 {
+    [EnableCors(origins: "*", headers: "*", methods: "*")]
     [Route("api/projects")]
     public class ProjectController : Controller
     {
@@ -107,13 +109,15 @@ namespace VCAPI.Controllers
             return Ok();
         }
 
-        public class RollbackProjectMarshallObject
+        [HttpGet("{projectId}/revisions")]
+        public async Task<IActionResult> getRevisions([FromRoute]int projectId)
         {
-            public string comment;
-            public int revision;
+            RevisionInfo[] revisions = await repository.GetRevisions(projectId);
+            return Ok(revisions);
         }
 
-        [HttpPost("{projectId}/rollback")]
+        [HttpPut("{projectId}/rollback")]
+        [VerifyModelState]
         [Authorize]
         public async Task<IActionResult> rollbackProject([FromRoute] int projectId, [FromBody]RollbackProjectMarshallObject marshall)
         {

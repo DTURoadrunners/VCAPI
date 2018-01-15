@@ -13,6 +13,7 @@ using Newtonsoft.Json.Linq;
 using VCAPI.Repository.Models;
 using System.Net;
 using VCAPI.Controllers;
+using static VCAPI.Controllers.ComponentTypeController;
 
 namespace tests.IntegrationTest
 {
@@ -119,7 +120,7 @@ namespace tests.IntegrationTest
             Assert.NotNull(response.Headers.Location);
 
             int createdId = GetCreatedId(response.Headers.Location.ToString());
-            Assert.True(createdId >= 0);
+            Assert.True(createdId > 0);
             
             return createdId;
         }
@@ -166,7 +167,7 @@ namespace tests.IntegrationTest
             string jwtToken = await GetJWTToken(LoginCredentialProvider.GetSuperAdmin());
             SetAuthorization(client, jwtToken);
 
-            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, "api/project/" + projectId);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, "api/projects/" + projectId);
             string reason = "Deleted test proejct";
             request.Content = new ByteArrayContent(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(reason)));
             request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
@@ -175,11 +176,40 @@ namespace tests.IntegrationTest
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             return true;
         }   
+        
+        private async Task<RevisionInfo[]> GetProjectRevisions(int projectId)
+        {
+            string jwtToken = await GetJWTToken(LoginCredentialProvider.GetSuperAdmin());
+            SetAuthorization(client, jwtToken);
 
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, "api/projects/" + projectId + "/revisions");
+            HttpResponseMessage response = await client.SendAsync(request);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            RevisionInfo[] revisons = JsonConvert.DeserializeObject<RevisionInfo[]>(await response.Content.ReadAsStringAsync());
+            return revisons;
+        }
+
+        private async Task<bool> RollbackProjectRevision(int projectId, int revision)
+        {
+            RollbackProjectMarshallObject marshallObject = new RollbackProjectMarshallObject()
+            {
+                comment = "Test rollback",
+                revision = revision
+            };
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Put, "api/projects/" + projectId + "/rollback");
+            request.Content = new ByteArrayContent(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(marshallObject)));
+            request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            
+            HttpResponseMessage response = await client.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+            return true;
+        }
+        
         [Fact]
         public async void CheckProjectEndpointCRUD()
         {
-            ProjectInfo newProject = new ProjectInfo(0, "TestProject1");
+            const string originalName = "TestProject1";
+            ProjectInfo newProject = new ProjectInfo(0, originalName);
             
             int createdId = await TestCreateProject(newProject);
             newProject.id = createdId;
@@ -191,17 +221,277 @@ namespace tests.IntegrationTest
 
             await DeleteProject(createdId);
             Assert.Null(await TestGetProject(createdId));
+
+            RevisionInfo[] revisons = await GetProjectRevisions(createdId);
+            Assert.Equal("created", revisons[2].eventType);
+            await RollbackProjectRevision(createdId, revisons[2].revisonId);
+            info = await TestGetProject(createdId);
+            Assert.NotNull(info);
+            Assert.Equal(originalName.ToLower(), info.name);
+            revisons = await GetProjectRevisions(createdId);
+            Assert.Equal("rollback", revisons[0].eventType);
         }
 
         [Fact]
         public async void CheckComponentTypeEndpointCRUD()
         {
+            const string updatedLabel = "Updated component type"; 
+            ComponentTypeInfo componentType = new ComponentTypeInfo(0, "Test Component", 1, 1, "Test Component");
+            int componentTypeId = await CreateNewComponentType(componentType);
+            componentType.name = updatedLabel;
+            await UpdateComponentType(componentTypeId, componentType);
+            ComponentTypeInfo updatedComponent = await GetComponentType(componentTypeId);
+            Assert.Equal(updatedLabel, updatedComponent.name);
+            await DeleteComponentType(componentTypeId);
+            ComponentTypeInfo expectedNull = await GetComponentType(componentTypeId);
+            Assert.Null(expectedNull);
+            RevisionInfo[] revisions = await GetComponentTypeRevisions(componentTypeId);
+            Assert.Equal(3, revisions.Length);
+            Assert.Equal("deleted", revisions[0].eventType);
+            
+            await RollbackComponentType(componentTypeId, revisions[2].revisonId);
+            
+            revisions = await GetComponentTypeRevisions(componentTypeId);
+            Assert.Equal(4, revisions.Length);
+            Assert.Equal("rollback", revisions[0].eventType);
+
+            ComponentTypeInfo info = await GetComponentType(componentTypeId);
+            Assert.NotNull(info);
+        }
+
+        private async Task<RevisionInfo[]> GetComponentTypeRevisions(int componentTypeId)
+        {
             string jwtToken = await GetJWTToken(LoginCredentialProvider.GetSuperAdmin());
             SetAuthorization(client, jwtToken);
-            string strBody = "";
-            HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Post, "api/projects/1/componentType");
-            message.Content = new ByteArrayContent(Encoding.UTF8.GetBytes(strBody));
-            message.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Get, "api/projects/1/componentType/" + componentTypeId + "/revisions");
+            HttpResponseMessage response = await client.SendAsync(message);
+            response.EnsureSuccessStatusCode();
+            return JsonConvert.DeserializeObject<RevisionInfo[]>(await response.Content.ReadAsStringAsync());
         }
+
+        private async Task<bool> RollbackComponentType(int componentTypeId, int revisionId)
+        {
+            string jwtToken = await GetJWTToken(LoginCredentialProvider.GetSuperAdmin());
+            SetAuthorization(client, jwtToken);
+            HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Put, "api/projects/1/componentType/" + componentTypeId + "/rollback");
+            RollbackProjectMarshallObject rollbackObject = new RollbackProjectMarshallObject()
+            {
+                comment = "Test revert",
+                revision = revisionId
+            };
+            
+            message.Content = new ByteArrayContent(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(rollbackObject)));
+            message.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            HttpResponseMessage response = await client.SendAsync(message);
+
+            response.EnsureSuccessStatusCode();
+            return true;
+        }
+
+        private async Task<ComponentTypeInfo> GetComponentType(int componentTypeId)
+        {
+            string jwtToken = await GetJWTToken(LoginCredentialProvider.GetSuperAdmin());
+            SetAuthorization(client, jwtToken);
+            HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Get, "api/projects/1/componentType/" + componentTypeId);
+            HttpResponseMessage response = await client.SendAsync(message);
+            if(response.StatusCode == HttpStatusCode.OK)
+            {
+                string content = await response.Content.ReadAsStringAsync();
+                return JsonConvert.DeserializeObject<ComponentTypeInfo>(content);
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        private async Task<bool> DeleteComponentType(int idToDelete)
+        {
+            string jwtToken = await GetJWTToken(LoginCredentialProvider.GetSuperAdmin());
+            SetAuthorization(client, jwtToken);
+            HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Delete, "api/projects/1/componentType/" + idToDelete);
+            string reason = "deleted test component";
+            message.Content = new ByteArrayContent(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(reason)));
+            message.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            HttpResponseMessage response = await client.SendAsync(message);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            return true;
+        }
+
+        private async Task<bool> UpdateComponentType(int idToUpdate, ComponentTypeInfo newObject)
+        {
+            string jwtToken = await GetJWTToken(LoginCredentialProvider.GetSuperAdmin());
+            SetAuthorization(client, jwtToken);
+            HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Put, "api/projects/1/componentType/" + idToUpdate);
+            ComponentTypeMarshallObject marshall = new ComponentTypeMarshallObject()
+            {
+                model = newObject,
+                comment = "Update project"
+            };
+            message.Content = new ByteArrayContent(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(marshall)));
+            message.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            HttpResponseMessage response = await client.SendAsync(message);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            return true;
+        }
+
+        private async Task<int> CreateNewComponentType(ComponentTypeInfo newObject)
+        {
+            string jwtToken = await GetJWTToken(LoginCredentialProvider.GetSuperAdmin());
+            SetAuthorization(client, jwtToken);
+            HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Post, "api/projects/1/componentType");
+            ComponentTypeMarshallObject marshall = new ComponentTypeMarshallObject(){
+                model = newObject,
+                comment = "Test Project"
+            };
+            message.Content = new ByteArrayContent(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(marshall)));
+            message.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            HttpResponseMessage response = await client.SendAsync(message);
+            Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+            int createdId = GetCreatedId(response.Headers.Location.ToString());
+            Assert.True(createdId > 0);
+            
+            return createdId;
+        }
+
+        [Fact]
+        public async void CheckComponentEndpointCRUD()
+        {
+            const string status = "in use";
+
+            ComponentInfo componentType = new ComponentInfo(0, status, "Test Component");
+            int componentId = await CreateComponent(componentType);
+            Assert.True(componentId > 0);
+            componentType.status = "Test update";
+            await UpdateComponent(componentId, componentType);
+            ComponentInfo updatedComponentType = await GetComponent(componentId);
+            Assert.Equal(updatedComponentType.comment, componentType.comment);
+            Assert.Equal(updatedComponentType.status, componentType.status);
+            Assert.Equal(updatedComponentType.id, componentId);
+            await DeleteComponent(componentId);
+            ComponentInfo expectedNull = await GetComponent(componentId);
+            Assert.Null(expectedNull);
+
+            RevisionInfo[] info = await GetComponentRevisions(componentId);
+            Assert.NotNull(info);
+
+            Assert.Equal(3, info.Length);
+            Assert.Equal("deleted", info[0].eventType);
+            Assert.Equal("created", info[2].eventType);
+
+            await RollbackComponent(componentId, info[2].revisonId);
+
+            info = await GetComponentRevisions(componentId);
+            Assert.Equal("rollback", info[0].eventType);
+
+            ComponentInfo expectedNotNull = await GetComponent(componentId);
+            Assert.NotNull(expectedNotNull);
+            Assert.Equal(status, expectedNotNull.status);
+        }
+
+        private async Task<RevisionInfo[]> GetComponentRevisions(int componentId)
+        {
+            string jwtToken = await GetJWTToken(LoginCredentialProvider.GetSuperAdmin());
+            SetAuthorization(client, jwtToken);
+
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, "api/projects/1/componentType/1/component/" + componentId + "/revisions");
+            HttpResponseMessage response = await client.SendAsync(request);
+            if(response.StatusCode == HttpStatusCode.OK)
+            {
+                RevisionInfo[]  revisions = JsonConvert.DeserializeObject<RevisionInfo[]>(await response.Content.ReadAsStringAsync());
+                return revisions;
+            }
+            else
+            {
+                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+                return null;
+            }
+        }
+
+        private async Task<bool> RollbackComponent(int componentId, int revision)
+        {
+            RollbackProjectMarshallObject rollbackObject = new RollbackProjectMarshallObject(){
+                comment = "Rollback tetst",
+                revision = revision
+            };
+
+            string jwtToken = await GetJWTToken(LoginCredentialProvider.GetSuperAdmin());
+            SetAuthorization(client, jwtToken);
+
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Put, "api/projects/1/componentType/1/component/" + componentId + "/rollback");
+            request.Content = new ByteArrayContent(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(rollbackObject)));
+            request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            HttpResponseMessage response = await client.SendAsync(request);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            return true;
+        }
+
+        private async Task<int> CreateComponent(ComponentInfo info)
+        {
+            string jwtToken = await GetJWTToken(LoginCredentialProvider.GetSuperAdmin());
+            SetAuthorization(client, jwtToken);
+            ComponentController.ComponentMarshallObject content = new ComponentController.ComponentMarshallObject(){
+                model = info,
+                comment = "Create test object"
+            };
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "api/projects/1/componentType/1/component");
+            request.Content = new ByteArrayContent(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(content)));
+            request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            HttpResponseMessage response = await client.SendAsync(request);
+            Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+            return GetCreatedId(response.Headers.Location.ToString());
+        }
+
+        private async Task<bool> UpdateComponent(int IdToUpdate, ComponentInfo newInfo)
+        {
+            string jwtToken = await GetJWTToken(LoginCredentialProvider.GetSuperAdmin());
+            SetAuthorization(client, jwtToken);
+            ComponentController.ComponentMarshallObject content = new ComponentController.ComponentMarshallObject(){
+                model = newInfo,
+                comment = "Update test object"
+            };
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Put, "api/projects/1/componentType/1/component/" + IdToUpdate);
+            request.Content = new ByteArrayContent(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(content)));
+            request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            
+            HttpResponseMessage response = await client.SendAsync(request);
+            
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            return true;
+        }
+
+        private async Task<ComponentInfo> GetComponent(int idToUpdate)
+        {
+            string jwtToken = await GetJWTToken(LoginCredentialProvider.GetSuperAdmin());
+            SetAuthorization(client, jwtToken);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, "api/projects/1/componentType/1/component/" + idToUpdate);
+            
+            HttpResponseMessage response = await client.SendAsync(request);
+            if(response.StatusCode == HttpStatusCode.OK)
+            {
+                byte[] reply = await response.Content.ReadAsByteArrayAsync();
+                return JsonConvert.DeserializeObject<ComponentInfo>(Encoding.UTF8.GetString(reply));
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        private async Task<bool> DeleteComponent(int idToDelete)
+        {
+            string jwtToken = await GetJWTToken(LoginCredentialProvider.GetSuperAdmin());
+            SetAuthorization(client, jwtToken);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, "api/projects/1/componentType/1/component/" + idToDelete);
+            string reason = "deleted test component";
+            request.Content = new ByteArrayContent(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(reason)));
+            request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            HttpResponseMessage response = await client.SendAsync(request);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            return true;
+        }
+
     }
 }

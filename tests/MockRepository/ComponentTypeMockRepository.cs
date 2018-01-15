@@ -58,10 +58,15 @@ namespace tests.MockRepository
             }
             return false;
         }
-        public async Task<bool> RollbackComponentType(int id, string userId, string comment)
+        
+        public Task<bool> RollbackComponentType(int projectId, int revisionId, string userId, string comment)
         {
             throw new System.NotImplementedException();
         }
 
+        public Task<RevisionInfo[]> GetRevisionAsync(int componentTypeId)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

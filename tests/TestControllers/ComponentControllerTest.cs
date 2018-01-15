@@ -137,9 +137,8 @@ namespace VCAPI.Repository.ControllerTests
 
             Assert.Null(await repository.GetComponent(existingComponentId));    
         }
-        [Fact]
-        public async void RollbackComponent(){
-            
-        }
+       
+
+       
     }
 }

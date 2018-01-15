@@ -22,90 +22,113 @@ namespace VCAPI.Repository.MySQL
             connector = conn;
         }
 
-        public async Task<int> CreateComponent(int activeComponentTypeID, ComponentInfo component, string userid, string comment)
+        public async Task<int> CreateComponent(int componentTypeID, ComponentInfo component, string userid, string comment)
         {
             using (Connection conn = await connector.Create())
             {
                 MySqlCommand command = conn.Get().CreateCommand();
                 command.CommandText = "createComponent";
                 command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@activeComponentTypeID", activeComponentTypeID);
+                command.Parameters.AddWithValue("@componentTypeId", componentTypeID);
                 command.Parameters.AddWithValue("@status", component.status);
                 command.Parameters.AddWithValue("@comment", component.comment);
                 command.Parameters.AddWithValue("@userID", userid);
                 command.Parameters.AddWithValue("@logComment", comment);
+                command.Parameters.Add("@id", DbType.Int32).Direction = ParameterDirection.Output;
+                await command.ExecuteNonQueryAsync();
 
-                return await command.ExecuteNonQueryAsync();
+                return (int)command.Parameters["@id"].Value;
             }
         }
 
-        public async Task<bool> DeleteComponent(int activeID, string userid, string comment)
+        public async Task<bool> DeleteComponent(int componentId, string userid, string comment)
         {
             using (Connection conn = await connector.Create())
             {
                 MySqlCommand command = conn.Get().CreateCommand();
-                command.CommandText = "createComponent";
+                command.CommandText = "deleteComponent";
                 command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@activeID", activeID);
+                command.Parameters.AddWithValue("@ID", componentId);
                 command.Parameters.AddWithValue("@userID", userid);
                 command.Parameters.AddWithValue("@logComment", comment);
-                return await command.ExecuteNonQueryAsync() == 1;
+                await command.ExecuteNonQueryAsync();
+                return true;
             }
         }
 
-        public async Task<ComponentInfo> GetComponent(int id)
+        public async Task<ComponentInfo> GetComponent(int componentId)
         {
             using (Connection conn = await connector.Create())
             {
                 MySqlCommand command = conn.Get().CreateCommand();
-                command.CommandText = "getComponent";
-                command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@ID", id);
-                
+                command.CommandText = "select ID, typeID, status, comment as description from components where ID = @ID;";
+                command.Parameters.Add("@ID", DbType.Int32).Value = componentId;
+                command.Prepare();
                 DbDataReader reader = await command.ExecuteReaderAsync();
-                if (!await reader.NextResultAsync())
+                if (!await reader.ReadAsync())
                 {
                     return null;
                 }
-                return new ComponentInfo(reader.GetInt32(0), reader.GetString(1), reader.GetString(2));
+                return new ComponentInfo(reader.GetInt32(0), reader.GetString(2), reader.GetString(3));
             }
         }
 
-        public async Task<List<ComponentInfo>> GetComponents(int id)
+        public async Task<List<ComponentInfo>> GetComponents(int componentId)
         {
             using (Connection conn = await connector.Create())
             {
                 MySqlCommand command = conn.Get().CreateCommand();
-                command.CommandText = "getActiveComponents";
-                command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@componentTypeID", id);
-                command.Parameters["@ID"].Direction = ParameterDirection.Input;
+                command.CommandText = "select ID, status, command as description from components where typeID = @ID;";
+                command.Parameters.Add("@ID", DbType.Int32).Value = componentId;
+                command.Prepare();
                 DbDataReader reader = await command.ExecuteReaderAsync();
-                if (!await reader.NextResultAsync())
-                {
-                    return null;
-                }
                 List<ComponentInfo> list = new List<ComponentInfo>();
-                while (reader.NextResult())
+                while(await reader.ReadAsync())
                 {
                     list.Add(new ComponentInfo(reader.GetInt32(0), reader.GetString(1), reader.GetString(2)));
                 }
-
                 return list;
             }
         }
 
-        public async Task<bool> RollbackComponent(int logId, string userId, string comment)
+        public async Task<RevisionInfo[]> GetRevisions(int componentId)
+        {
+            using(Connection conn = await connector.Create())
+            {
+                MySqlCommand command = conn.Get().CreateCommand();
+                command.CommandText = "select `revisionNumber`, `userID`, `type`, `comment`, `timestamp` from componentsRevisions where `staticComponentId` = @componentTypeId;";
+                command.Parameters.AddWithValue("@componentTypeId", componentId);
+                command.Prepare();
+                using(DbDataReader reader =  await command.ExecuteReaderAsync())
+                {
+                    List<RevisionInfo> revisions = new List<RevisionInfo>();
+                    while(await reader.ReadAsync())
+                    {
+                        revisions.Add(new RevisionInfo(){
+                            revisonId = reader.GetInt32(0),
+                            author = reader.GetString(1),
+                            eventType = reader.GetString(2),
+                            comment = reader.GetString(3),
+                            timestamp = reader.GetInt32(4)
+                        });
+                    }
+                    return revisions.ToArray();
+                }
+            }
+        }
+
+        public async Task<bool> RollbackComponent(int projectId, int revisionId, string userId, string comment)
         {
             using (Connection conn = await connector.Create())
             {
                 MySqlCommand command = conn.Get().CreateCommand();
                 command.CommandText = "rollbackComponent";
                 command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@logID", logId);
+                command.Parameters.AddWithValue("@revisionID", revisionId);
                 command.Parameters.AddWithValue("@userid", userId);
-                command.Parameters.AddWithValue("@ommentparam", comment);
-                return await command.ExecuteNonQueryAsync() == 1;
+                command.Parameters.AddWithValue("@commentparam", comment);
+                await command.ExecuteNonQueryAsync();
+                return true;
             }
         }
 
@@ -116,12 +139,14 @@ namespace VCAPI.Repository.MySQL
                 MySqlCommand command = conn.Get().CreateCommand();
                 command.CommandText = "updateComponent";
                 command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@activeComponentTypeID", activeComponentTypeID);
+                command.Parameters.AddWithValue("@componentId", component.id);
                 command.Parameters.AddWithValue("@status", component.status);
+                command.Parameters.AddWithValue("@associatedComponentType", activeComponentTypeID);
                 command.Parameters.AddWithValue("@comment", component.comment);
                 command.Parameters.AddWithValue("@userID", userid);
                 command.Parameters.AddWithValue("@logComment", comment);
-                return await command.ExecuteNonQueryAsync() == 1;
+                await command.ExecuteNonQueryAsync();
+                return true;
             }
         }
     }

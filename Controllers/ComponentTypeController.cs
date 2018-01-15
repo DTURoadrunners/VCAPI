@@ -8,10 +8,12 @@ using VCAPI.Repository.Models;
 using VCAPI.Repository;
 using System.Linq;
 using System.Security.Claims;
+using System.Web.Http.Cors;
 
 namespace VCAPI.Controllers
 {
-    [Route("api/project/{projectId}/[controller]")]
+    [EnableCors(origins: "*", headers: "*", methods: "*")]
+    [Route("api/projects/{projectId}/[controller]")]
     public class ComponentTypeController : Controller
     {
         private readonly IComponentTypeRepository repository;
@@ -74,10 +76,11 @@ namespace VCAPI.Controllers
             {
                 return new BadRequestObjectResult("Failed to create componenttype");
             }
-            return Created("api/project/" + projectId + "/componentType/", id);
+            return Created("api/project/" + projectId + "/componentType/" + id, null);
         }
 
         [Authorize]
+        [VerifyModelState]
         [HttpPut("{componentTypeId}")]
         public async Task<IActionResult> UpdateComponentType([FromRoute] int projectId, [FromRoute] int componentTypeId, [FromBody] ComponentTypeMarshallObject marshall)
         {
@@ -96,7 +99,8 @@ namespace VCAPI.Controllers
         }
 
         [Authorize]
-        [HttpPut("{componentTypeId}")]
+        [VerifyModelState]
+        [HttpDelete("{componentTypeId}")]
         public async Task<IActionResult> DeleteComponentType([FromRoute] int projectId, [FromRoute] int componentTypeId, [FromBody]string reason)
         {
             string userId = User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value;
@@ -112,19 +116,35 @@ namespace VCAPI.Controllers
 
             return Ok();
         }
+        
+        [Authorize]
+        [HttpGet("{componentTypeid}/revisions")]
+        public async Task<IActionResult> getRevisions([FromRoute]int projectId, [FromRoute]int componentTypeId)
+        {
+            string userId = User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value;
+            if (await resourceAccess.GetRankForProject(userId, 0) < Repository.RANK.STUDENT)
+            {
+                return Unauthorized();
+            }
+            
+            RevisionInfo[] revisions = await repository.GetRevisionAsync(componentTypeId);
+            return Ok(revisions);
+        }
 
         [Authorize]
-        [HttpPut("{componentTypeId}")]
-        public async Task<IActionResult> rollbackComponentType([FromRoute] int projectId, [FromRoute] int logId, [FromBody] string userId, [FromBody] string comment)
+        [VerifyModelState]
+        [HttpPut("{componentTypeId}/rollback")]
+        public async Task<IActionResult> rollbackComponentType([FromRoute] int projectId, [FromRoute] int componentTypeId, [FromBody]RollbackProjectMarshallObject rollback)
         {
-            if (await resourceAccess.GetRankForProject(User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value, 0) < Repository.RANK.STUDENT)
+            string userId = User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value;
+            if (await resourceAccess.GetRankForProject(userId, 0) < Repository.RANK.STUDENT)
             {
                 return Unauthorized();
             }
 
-            if (!await repository.RollbackComponentType(logId, userId, comment))
+            if (!await repository.RollbackComponentType(projectId, rollback.revision, userId, rollback.comment))
             {
-                return new BadRequestObjectResult("Failed to rollback log: " + logId);
+                return new BadRequestObjectResult("Failed to rollback log: " + rollback.revision);
             }
 
             return Ok();
