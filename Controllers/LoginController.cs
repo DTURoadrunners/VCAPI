@@ -16,6 +16,7 @@ using Microsoft.Extensions.Options;
 using VCAPI.Options;
 using VCAPI.Repository.Models;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+using Newtonsoft.Json.Linq;
 
 namespace VCAPI.Controllers
 {
@@ -114,8 +115,9 @@ namespace VCAPI.Controllers
                 };
                 SecurityToken token = jwtSecurityToken.CreateToken(securityTokenRegister);
                 String response = jwtSecurityToken.WriteToken(token);
-
-                return Ok(response);
+                JObject jObject = new JObject();
+                jObject.Add("Token", response);
+                return Ok(jObject);
             }
 
             return Unauthorized();

@@ -12,7 +12,7 @@ namespace VCAPI.Repository.Interfaces
         Task<bool> UpdateDocument(DocumentInfo info, string userId, string comment);
         Task<bool> DeleteDocument(int id, string userId, string comment);
         Task<bool> RollbackDocument(int id, string userId, string comment);
-        Task<RevisionInfo[]> GetRevisionAsync(int documentId);
+        Task<RevisionInfo[]> GetRevisionsAsync(int documentId);
         Task<DocumentInfo> GetDocument(int id);
         Task<List<DocumentInfo>> getDocuments(int id);
     }
