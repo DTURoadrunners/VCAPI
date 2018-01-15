@@ -80,7 +80,8 @@ namespace VCAPI.Repository.ControllerTests
             CreatedResult result = await controller.createProject(marshall) as CreatedResult;
             Assert.NotNull(result);
             Assert.Equal((int)HttpStatusCode.Created, result.StatusCode);
-            int? createdId = result.Value as int?;
+            string createdIdStr = result.Location.Substring(result.Location.LastIndexOf('/') + 1);
+            int createdId = int.Parse(createdIdStr);
             Assert.NotNull(createdId);
             Assert.Equal(expectedCreateId, createdId);
             Assert.True(repository.RepositoryContainsEntry((int)createdId));
@@ -117,6 +118,32 @@ namespace VCAPI.Repository.ControllerTests
             Assert.Equal((int)HttpStatusCode.OK, result.StatusCode);
 
             Assert.Null(await repository.GetProject(existingProjectId));    
+        }
+        [Fact]
+         public async void RollbackProjectAsSuper(){
+            string username = "Nobody";
+            access.AddSuperadmin(username);
+            ControllerTestUtility.SetCallersUsername(username, controller);
+            ProjectController.RollbackProjectMarshallObject marshall = new ProjectController.RollbackProjectMarshallObject();
+            marshall.revision = 1;
+            marshall.comment = "Typo";
+
+            OkResult result = await controller.rollbackProject(0, marshall) as OkResult;
+            Assert.NotNull(result);
+            Assert.Equal((int)HttpStatusCode.OK, result.StatusCode);
+            Assert.NotNull(repository.rollback);
+        }
+        [Fact]
+        public async void RollbackProjectAsAdmin(){
+            string anotherUsername = "SomebodyElse1";
+            access.AssignRankForProject(anotherUsername, 1, RANK.ADMIN);
+            ControllerTestUtility.SetCallersUsername(anotherUsername, controller);
+
+            ProjectController.RollbackProjectMarshallObject marshall = new ProjectController.RollbackProjectMarshallObject();
+            marshall.revision = 1;
+            marshall.comment = "Typo";
+            IActionResult actionResult = await controller.rollbackProject(2, marshall);
+            Assert.True(actionResult is UnauthorizedResult);
         }
     }
 }

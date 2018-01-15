@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using VCAPI.Repository.Interfaces;
@@ -8,6 +9,11 @@ namespace VCAPI.MockRepository
     public class ProjectMockRepository : IProjectRepository
     {
         private List<ProjectInfo> repository = new List<ProjectInfo>();
+
+        public Boolean rollback{
+            private set;
+            get;
+        }
         public bool RepositoryContainsEntry(int id)
         {
             return id < repository.Count && repository[id] != null;
@@ -50,9 +56,10 @@ namespace VCAPI.MockRepository
             return new List<ProjectInfo>(repository);
         }
 
-        public Task<bool> RollbackProject(int id, int revisionId, string userId, string comment)
+        public async Task<bool> RollbackProject(int id, int revisionId, string userId, string comment)
         {
-            throw new System.NotImplementedException();
+            rollback = true;
+            return rollback;
         }
 
         public async Task<bool> UpdateProject(ProjectInfo inf, int id, string userId, string comment)

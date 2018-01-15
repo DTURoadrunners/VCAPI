@@ -115,7 +115,7 @@ namespace VCAPI.Repository.ControllerTests
             Assert.Equal(0, repositoryEntry.id);
         }
         [Fact]
-        public async void DeleteComponentIfSuperuser(){
+        public async void DeleteComponentTypeIfSuperuser(){
             
             string username = "Somebody";
             access.AddSuperadmin(username);
@@ -128,8 +128,18 @@ namespace VCAPI.Repository.ControllerTests
             Assert.Null(await repository.GetComponentType(existingComponentTypeId, 1));     
         }
         [Fact]
-        public async void RollbackComponent(){
-        
+        public async void RollbackComponentTypeAsStudent(){
+            string username = "Somebody1";
+            access.AssignRankForProject(username, 1, RANK.STUDENT);
+            ControllerTestUtility.SetCallersUsername(username, controller);
+
+
+        }
+
+        public async void RollbackComponentTypeAsGuest(){
+            string anotherUsername = "SomebodyElse1";
+            access.AssignRankForProject(anotherUsername, 1, RANK.GUEST);
+            ControllerTestUtility.SetCallersUsername(anotherUsername, controller);
         }
     }
 }
