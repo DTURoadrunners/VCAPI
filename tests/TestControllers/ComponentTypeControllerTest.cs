@@ -39,12 +39,9 @@ namespace VCAPI.Repository.ControllerTests
         }
         [Fact]
         public async void GetComponentTypeReturnsBadRequest(){
-            BadRequestObjectResult result = await controller.GetComponentType(1, existingComponentTypeId) as BadRequestObjectResult;
+            BadRequestObjectResult result = await controller.GetComponentType(2, 4) as BadRequestObjectResult;
             Assert.NotNull(result);
             Assert.Equal((int)HttpStatusCode.BadRequest, result.StatusCode);
-
-            ComponentTypeInfo response = result.Value as ComponentTypeInfo;
-            Assert.NotNull(response);
         }
         [Fact]
         public async void ReturnsAllComponentTypes(){
@@ -104,19 +101,18 @@ namespace VCAPI.Repository.ControllerTests
              
             const string username = "Somebody";
             access.AddSuperadmin(username);
-            const int newComponentTypeid = 101;
             ControllerTestUtility.SetCallersUsername(username, controller);
             ComponentTypeController.ComponentTypeMarshallObject input = new ComponentTypeController.ComponentTypeMarshallObject();        
-            ComponentTypeInfo info = new ComponentTypeInfo(18, "TestTestTest", 12, 123, "TestComment");
+            ComponentTypeInfo info = new ComponentTypeInfo(1, "TestTestTest", 1, 123, "TestComment");
             input.model = info;
             input.comment = "Test component type";
-            OkResult result = await controller.UpdateComponentType(1, 1, input) as OkResult;
+            OkResult result = await controller.UpdateComponentType(0, existingComponentTypeId, input) as OkResult;
             Assert.NotNull(result);
             Assert.Equal((int)HttpStatusCode.OK, result.StatusCode);
 
             ComponentTypeInfo repositoryEntry = await repository.GetComponentType(existingComponentTypeId, 1);
             Assert.NotNull(repositoryEntry);
-            Assert.Equal(newComponentTypeid, repositoryEntry.id);
+            Assert.Equal(0, repositoryEntry.id);
         }
         [Fact]
         public async void DeleteComponentIfSuperuser(){

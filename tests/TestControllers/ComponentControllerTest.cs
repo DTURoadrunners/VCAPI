@@ -65,16 +65,18 @@ namespace VCAPI.Repository.ControllerTests
             ControllerTestUtility.SetCallersUsername(username, controller);
 
             int expectedCreateId = repository.GetNextInsertId();
-            ComponentController.ComponentMarshallObject marshall;
+            ComponentController.ComponentMarshallObject marshall = new ComponentController.ComponentMarshallObject();
 
             marshall.model = new ComponentInfo(0, "available", "comment");
             marshall.comment = "initialize create";
             
-            CreatedResult result = await controller.CreateComponent(0, 1, marshall) as CreatedResult;
+            ActionResult controllerResponse = await controller.CreateComponent(0, 1, marshall) as ActionResult;
+            Assert.Equal(typeof(CreatedResult), controllerResponse.GetType());
+            CreatedResult result = controllerResponse as CreatedResult;
             Assert.NotNull(result);
             Assert.Equal((int)HttpStatusCode.Created, result.StatusCode);
-            int? createdId = result.Value as int?;
-            Assert.NotNull(createdId);
+            string createdIdStr = result.Location.Substring(result.Location.LastIndexOf('/') + 1);
+            int createdId = int.Parse(createdIdStr);
             Assert.Equal(expectedCreateId, createdId);
             Assert.True(repository.RepositoryContainsEntry((int)createdId));     
             Assert.Equal(await repository.GetComponent((int)createdId),marshall.model);
@@ -86,16 +88,18 @@ namespace VCAPI.Repository.ControllerTests
             ControllerTestUtility.SetCallersUsername(anotherUsername, controller);
 
             int expectedCreateId = repository.GetNextInsertId();
-            ComponentController.ComponentMarshallObject marshall;
+            ComponentController.ComponentMarshallObject marshall = new ComponentController.ComponentMarshallObject();
 
             marshall.model = new ComponentInfo(0, "available", "comment");
             marshall.comment = "initialize create";
             
-            CreatedResult result = await controller.CreateComponent(0, 1, marshall) as CreatedResult;
+            ActionResult controllerResponse = await controller.CreateComponent(0, 1, marshall) as ActionResult;
+            Assert.Equal(typeof(CreatedResult), controllerResponse.GetType());
+            CreatedResult result = controllerResponse as CreatedResult;
             Assert.NotNull(result);
             Assert.Equal((int)HttpStatusCode.Created, result.StatusCode);
-            int? createdId = result.Value as int?;
-            Assert.NotNull(createdId);
+            string createdIdStr = result.Location.Substring(result.Location.LastIndexOf('/') + 1);
+            int createdId = int.Parse(createdIdStr);
             Assert.Equal(expectedCreateId, createdId);
             Assert.True(repository.RepositoryContainsEntry((int)createdId));     
             Assert.Equal(await repository.GetComponent((int)createdId),marshall.model);
@@ -105,19 +109,20 @@ namespace VCAPI.Repository.ControllerTests
         public async void UpdatesComponentIfSuperUser(){
             
             const string username = "Somebody";
-            const int newComponentTypeid = 101;
+            access.AddSuperadmin(username);
+            const int Componentid = 0;
             ControllerTestUtility.SetCallersUsername(username, controller);
-            ComponentController.ComponentMarshallObject marshall;
+            ComponentController.ComponentMarshallObject marshall = new ComponentController.ComponentMarshallObject();
 
-            marshall.model = new ComponentInfo(0, "available", "comment");
+            marshall.model = new ComponentInfo(0, "not available", "comment");
             marshall.comment = "initialize update";
-            OkResult result = await controller.UpdateComponent(0, newComponentTypeid, 1, marshall) as OkResult;
+            OkResult result = await controller.UpdateComponent(0, Componentid, 10, marshall) as OkResult;
             Assert.NotNull(result);
             Assert.Equal((int)HttpStatusCode.OK, result.StatusCode);
 
             ComponentInfo repositoryEntry = await repository.GetComponent(existingComponentId);
             Assert.NotNull(repositoryEntry);
-            Assert.Equal(newComponentTypeid, repositoryEntry.id);
+            Assert.Equal(10, repositoryEntry.id);
         }
         [Fact]
         public async void DeleteComponentIfSuperuser(){

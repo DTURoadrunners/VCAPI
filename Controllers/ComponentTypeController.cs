@@ -86,7 +86,7 @@ namespace VCAPI.Controllers
             {
                 return Unauthorized();
             }
-
+            marshall.model.id = componentTypeId;
             if (!await repository.UpdateComponentType(marshall.model, userId, marshall.comment))
             {
                 return new BadRequestObjectResult("Failed to update componenttype: " + marshall.model.id);
