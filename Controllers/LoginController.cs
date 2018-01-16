@@ -67,18 +67,18 @@ namespace VCAPI.Controllers
         [VerifyModelState]
         public async Task<IActionResult> Signup([FromBody] RegisterCredentials credentials){
             
-           /* HttpClient client = new HttpClient();
+           HttpClient client = new HttpClient();
             HttpRequestMessage msg = new HttpRequestMessage()
             {
                 Method = HttpMethod.Get,
                 RequestUri = new System.Uri("http://www.campusnet.dtu.dk/data/CurrentUser/Userinfo")
             };
-            msg.Headers.Add("x-appname", "Opslagsystem for �kobil");
+            msg.Headers.Add("x-appname", "Opslagsystem for Økobil");
             msg.Headers.Add("x-token", "3ddfc095-5a62-4162-a058-5bc3784e36d7");
             string token = Convert.ToBase64String(encoding.GetBytes(String.Format("{0}:{1}", credentials.username, credentials.CASCODE)));
             msg.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", token);
-            HttpResponseMessage result = await client.SendAsync(msg);*/
-            if (true /*result.IsSuccessStatusCode*/)
+            HttpResponseMessage result = await client.SendAsync(msg);
+            if (result.IsSuccessStatusCode)
             {
                 UserInfo i = new UserInfo{userID = credentials.username, firstname = credentials.firstname, lastname = credentials.lastname, password = Encoding.UTF8.GetBytes(credentials.password)};
                 bool success = await repo.CreateUser(i);

@@ -26,7 +26,7 @@ namespace VCAPI.Repository.MySQL
             using(Connection conn = await connection.Create())
             {
                 MySqlCommand command = conn.Get().CreateCommand();
-                command.CommandText = "creatDocument";
+                command.CommandText = "createDocument";
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@_filename", info.filename);
                 command.Parameters.AddWithValue("@_activeComponentTypeID", id);
@@ -34,8 +34,10 @@ namespace VCAPI.Repository.MySQL
                 command.Parameters.AddWithValue("@_description", info.description);
                 command.Parameters.AddWithValue("@userID", userId);
                 command.Parameters.AddWithValue("@logComment", comment);
-
-                return await command.ExecuteNonQueryAsync();
+                command.Parameters.Add("@id", DbType.Int32).Direction = ParameterDirection.Output;
+        
+                await command.ExecuteNonQueryAsync();
+                return (int)command.Parameters["@id"].Value;
             }
         }
 
@@ -43,12 +45,12 @@ namespace VCAPI.Repository.MySQL
         {
             using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
-                command.CommandText = "getDocument";
-                command.CommandType = CommandType.StoredProcedure;
+                command.CommandText = "select ID, filename, description, bucketpath from documents where ID = @ID";
+                command.Prepare();
                 command.Parameters.AddWithValue("@ID", id);
                 command.Parameters["@ID"].Direction = ParameterDirection.Input;
                 DbDataReader reader = await command.ExecuteReaderAsync();
-                if(!await reader.NextResultAsync()){
+                if(!await reader.ReadAsync()){
                     return null;
                 }
                 
@@ -56,24 +58,24 @@ namespace VCAPI.Repository.MySQL
             }
         }
 
-        public async Task<List<DocumentInfo>> getDocuments(int id)
+        public async Task<List<DocumentInfo>> getDocuments(int componentTypeId)
         {
             using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
-                command.CommandText = "getActiveDocuments";
-                command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@componentTypeID", id);
+                command.CommandText = "select ID, filename, description, bucketpath from documents where componentTypeId = @ID";
+                command.Prepare();
+                command.Parameters.AddWithValue("@ID", componentTypeId);
                 command.Parameters["@ID"].Direction = ParameterDirection.Input;
                 DbDataReader reader = await command.ExecuteReaderAsync();
-                if(!await reader.NextResultAsync()){
-                    return null;
+               
+               
+                List<DocumentInfo> documents = new List<DocumentInfo>();
+                while(await reader.ReadAsync())
+                {
+                    documents.Add(new DocumentInfo(reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3));
                 }
-                List <DocumentInfo> list = new List<DocumentInfo>();
-                while (reader.NextResult()){
-                    list.Add(new DocumentInfo(reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3)));
-                }
-                
-                return list;
+
+                return documents;
             }
         }
         
@@ -90,7 +92,8 @@ namespace VCAPI.Repository.MySQL
                 command.Parameters.AddWithValue("@userID", userId);
                 command.Parameters.AddWithValue("@logComment", comment);
                
-               return await command.ExecuteNonQueryAsync() == 1;
+               await command.ExecuteNonQueryAsync();
+               return true;
             }
         }
         public async Task<bool> DeleteDocument(int id, string userId, string comment)
@@ -103,7 +106,8 @@ namespace VCAPI.Repository.MySQL
                 command.Parameters.AddWithValue("@userID", userId);
                 command.Parameters.AddWithValue("@logComment", comment);
                
-               return await command.ExecuteNonQueryAsync() == 1;
+               await command.ExecuteNonQueryAsync();
+               return true;
             }
         }
 
@@ -117,7 +121,8 @@ namespace VCAPI.Repository.MySQL
                 command.Parameters.AddWithValue("@userID", userId);
                 command.Parameters.AddWithValue("@commentParam", comment);
                
-               return await command.ExecuteNonQueryAsync() == 1;
+               await command.ExecuteNonQueryAsync();
+               return true;
             }
         }
 

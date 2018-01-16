@@ -196,7 +196,7 @@ CREATE TABLE `documentLog` (
 );
 
 DROP VIEW IF EXISTS `documents`;
-CREATE view `documents` AS SELECT 'ID', `bucketpath`, `filename`, `description` 
+CREATE view `documents` AS SELECT `ID`, `bucketpath`, `filename`, `description`, documentStaticId.associatedComponentTypeID as componentTypeId
 FROM `documentStaticId` join `documentJournal` ON `documentStaticId`.`activeDocumentID` = `documentJournal`.`documentID`;
 
 
