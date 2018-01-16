@@ -124,7 +124,7 @@ namespace VCAPI.Repository.ControllerTests
             string username = "Nobody";
             access.AddSuperadmin(username);
             ControllerTestUtility.SetCallersUsername(username, controller);
-            ProjectController.RollbackProjectMarshallObject marshall = new ProjectController.RollbackProjectMarshallObject();
+            RollbackProjectMarshallObject marshall = new RollbackProjectMarshallObject();
             marshall.revision = 1;
             marshall.comment = "Typo";
 
@@ -139,7 +139,7 @@ namespace VCAPI.Repository.ControllerTests
             access.AssignRankForProject(anotherUsername, 1, RANK.ADMIN);
             ControllerTestUtility.SetCallersUsername(anotherUsername, controller);
 
-            ProjectController.RollbackProjectMarshallObject marshall = new ProjectController.RollbackProjectMarshallObject();
+            RollbackProjectMarshallObject marshall = new RollbackProjectMarshallObject();
             marshall.revision = 1;
             marshall.comment = "Typo";
             IActionResult actionResult = await controller.rollbackProject(2, marshall);

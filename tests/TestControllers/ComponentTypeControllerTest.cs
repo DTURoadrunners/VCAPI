@@ -68,12 +68,13 @@ namespace VCAPI.Repository.ControllerTests
             CreatedResult result = await controller.CreateComponentType(1, input) as CreatedResult;
             Assert.NotNull(result);
             Assert.Equal((int)HttpStatusCode.Created, result.StatusCode);
-            int? createdId = result.Value as int?;
-            Assert.NotNull(createdId);
+            string createdIdStr = result.Location.Substring(result.Location.LastIndexOf('/') + 1);
+            int createdId = int.Parse(createdIdStr);
             Assert.Equal(expectedCreateId, createdId);
             Assert.True(repository.RepositoryContainsEntry((int)createdId));     
             Assert.Equal(await repository.GetComponentType((int)createdId, 1),info);  
         }
+        [Fact]
         public async void CreatesComponentTypeGivenCorrectModelAsStudent(){
            
             string anotherUsername = "SomebodyElse";
@@ -90,8 +91,8 @@ namespace VCAPI.Repository.ControllerTests
             CreatedResult result = await controller.CreateComponentType(1, input) as CreatedResult;
             Assert.NotNull(result);
             Assert.Equal((int)HttpStatusCode.Created, result.StatusCode);
-            int? createdId = result.Value as int?;
-            Assert.NotNull(createdId);
+            string createdIdStr = result.Location.Substring(result.Location.LastIndexOf('/') + 1);
+            int createdId = int.Parse(createdIdStr);
             Assert.Equal(expectedCreateId, createdId);
             Assert.True(repository.RepositoryContainsEntry((int)createdId));     
             Assert.Equal(await repository.GetComponentType((int)createdId, 1),info);
@@ -128,18 +129,32 @@ namespace VCAPI.Repository.ControllerTests
             Assert.Null(await repository.GetComponentType(existingComponentTypeId, 1));     
         }
         [Fact]
-        public async void RollbackComponentTypeAsStudent(){
-            string username = "Somebody1";
-            access.AssignRankForProject(username, 1, RANK.STUDENT);
+         public async void RollbackComponentTypeAsStudent(){
+            string username = "Nobody";
+            access.AssignRankForProject(username, 0, RANK.STUDENT);
             ControllerTestUtility.SetCallersUsername(username, controller);
+            RollbackProjectMarshallObject input = new RollbackProjectMarshallObject();
+            input.revision = 1;
+            input.comment = "Typo";
 
+            OkResult result = await controller.rollbackComponentType(0, 1, input) as OkResult;
 
+            Assert.NotNull(result);
+            Assert.Equal((int)HttpStatusCode.OK, result.StatusCode);
+            Assert.NotNull(repository.rollback);
         }
-
+        [Fact]
         public async void RollbackComponentTypeAsGuest(){
             string anotherUsername = "SomebodyElse1";
             access.AssignRankForProject(anotherUsername, 1, RANK.GUEST);
             ControllerTestUtility.SetCallersUsername(anotherUsername, controller);
+
+            RollbackProjectMarshallObject input = new RollbackProjectMarshallObject();
+            input.revision = 1;
+            input.comment = "Typo";
+
+            IActionResult actionResult = await controller.rollbackComponentType(0, 1, input);
+            Assert.True(actionResult is UnauthorizedResult);
         }
     }
 }

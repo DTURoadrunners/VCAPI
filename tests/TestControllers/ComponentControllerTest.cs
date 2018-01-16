@@ -81,10 +81,11 @@ namespace VCAPI.Repository.ControllerTests
             Assert.True(repository.RepositoryContainsEntry((int)createdId));     
             Assert.Equal(await repository.GetComponent((int)createdId),marshall.model);
         }
+        [Fact]
         public async void CreatesComponentGivenCorrectModelAsStudent(){
            
             string anotherUsername = "SomebodyElse";
-            access.AssignRankForProject(anotherUsername, 1, RANK.STUDENT);
+            access.AssignRankForProject(anotherUsername, 0, RANK.STUDENT);
             ControllerTestUtility.SetCallersUsername(anotherUsername, controller);
 
             int expectedCreateId = repository.GetNextInsertId();
@@ -137,8 +138,33 @@ namespace VCAPI.Repository.ControllerTests
 
             Assert.Null(await repository.GetComponent(existingComponentId));    
         }
-       
+        [Fact]
+        public async void RollbackComponentAsStudent(){
+            string username = "Nobody";
+            access.AssignRankForProject(username, 0, RANK.STUDENT);
+            ControllerTestUtility.SetCallersUsername(username, controller);
+            RollbackProjectMarshallObject marshall = new RollbackProjectMarshallObject();
+            marshall.revision = 1;
+            marshall.comment = "Typo";
 
+            OkResult result = await controller.rollbackComponent(0, 1, marshall) as OkResult;
+            Assert.NotNull(result);
+            Assert.Equal((int)HttpStatusCode.OK, result.StatusCode);
+            Assert.NotNull(repository.rollback);
+        }
+        [Fact]
+        public async void RollbackComponentAsGuest(){
+            string anotherUsername = "SomebodyElse1";
+            access.AssignRankForProject(anotherUsername, 1, RANK.GUEST);
+            ControllerTestUtility.SetCallersUsername(anotherUsername, controller);
+
+            RollbackProjectMarshallObject marshall = new RollbackProjectMarshallObject();
+            marshall.revision = 1;
+            marshall.comment = "Typo";
+
+            IActionResult actionResult = await controller.rollbackComponent(0, 1, marshall);
+            Assert.True(actionResult is UnauthorizedResult);
+        }
        
     }
 }

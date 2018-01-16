@@ -66,7 +66,7 @@ namespace VCAPI.Controllers
         public async Task<IActionResult> CreateComponentType([FromRoute] int projectId, [FromBody] ComponentTypeMarshallObject marshall)
         {
             string userId = User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value;
-            if (await resourceAccess.GetRankForProject(userId, 0) < Repository.RANK.STUDENT)
+            if (await resourceAccess.GetRankForProject(userId, projectId) < Repository.RANK.STUDENT)
             {
                 return Unauthorized();
             }
@@ -137,7 +137,7 @@ namespace VCAPI.Controllers
         public async Task<IActionResult> rollbackComponentType([FromRoute] int projectId, [FromRoute] int componentTypeId, [FromBody]RollbackProjectMarshallObject rollback)
         {
             string userId = User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value;
-            if (await resourceAccess.GetRankForProject(userId, 0) < Repository.RANK.STUDENT)
+            if (await resourceAccess.GetRankForProject(userId, projectId) < Repository.RANK.STUDENT)
             {
                 return Unauthorized();
             }

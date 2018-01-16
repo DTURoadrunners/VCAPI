@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using VCAPI.Repository.Interfaces;
@@ -8,6 +9,10 @@ namespace tests.MockRepository
     public class ComponentMockRepository : IComponentRepository
     {
         private List<ComponentInfo> repository = new List<ComponentInfo>();
+        public Boolean rollback{
+            private set;
+            get;
+        }
         public bool RepositoryContainsEntry(int id)
         {
             return id < repository.Count && repository[id] != null;
@@ -64,9 +69,10 @@ namespace tests.MockRepository
             throw new System.NotImplementedException();
         }
 
-        public Task<bool> RollbackComponent(int projectId, int revisionId, string userId, string comment)
+        public async Task<bool> RollbackComponent(int projectId, int revisionId, string userId, string comment)
         {
-            throw new System.NotImplementedException();
+            rollback = true;
+            return rollback;
         }
 
         public Task<RevisionInfo[]> GetRevisions(int componentTypeId)
