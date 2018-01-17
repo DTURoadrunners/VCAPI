@@ -72,7 +72,7 @@ namespace VCAPI.Repository.MySQL
                 List<DocumentInfo> documents = new List<DocumentInfo>();
                 while(await reader.ReadAsync())
                 {
-                    documents.Add(new DocumentInfo(reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3));
+                    documents.Add(new DocumentInfo(reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3)));
                 }
 
                 return documents;
