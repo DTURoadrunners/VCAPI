@@ -9,7 +9,7 @@ namespace VCAPI.Repository.Interfaces
     public interface IComponentRepository
     {
         /// <summary>
-        /// Creates a component
+        /// A component is all the components used in the project, it has an id and its divided into types 
         /// </summary>
         /// <param name="activeComponentTypeID">Used to see if its in </param>
         /// <param name="component">The data for the component</param>

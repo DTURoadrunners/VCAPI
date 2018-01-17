@@ -9,7 +9,7 @@ namespace VCAPI.Repository.Interfaces
     public interface ICategoryRepository
     {
         /// <summary>
-        /// Creates a component
+        /// A category is used to divide componentTypes.
         /// </summary>
         /// <param name="projectId">Used to see which project it is created in</param>
         /// <param name="model">Contains the data</param>

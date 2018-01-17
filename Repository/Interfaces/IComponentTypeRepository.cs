@@ -9,7 +9,7 @@ namespace VCAPI.Repository.Interfaces
     public interface IComponentTypeRepository
     {
         /// <summary>
-        /// Creates a component type
+        /// A componentType is divided by categories and they contain components
         /// </summary>
         /// <param name="info">Contains the neccesary data for the component</param>
         /// <param name="projectId">The project the component goes in</param>
