@@ -1,7 +1,7 @@
 namespace VCAPI.Repository
 {
     /// <summary>
-    /// The rank of a user determines if a user can do a certain thing.
+    /// The rank of a user determines if a user can do a certain thing. Every rank inherits the previous rank. 
     /// </summary>
     public enum RANK
     {

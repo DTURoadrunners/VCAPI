@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace VCAPI.Repository.MySQL
 {
+    /// <summary>
+    /// Helper class used by repositories to automatically connect with the database
+    /// </summary>
     public class DatabaseConnector
     {
         public class Connection : IDisposable

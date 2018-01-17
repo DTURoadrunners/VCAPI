@@ -17,7 +17,13 @@ namespace VCAPI.Repository.MySQL
         {
             connector = conn;
         }
-
+        /// <summary>
+        /// Assigns the user a rank for the project
+        /// </summary>
+        /// <param name="username">The user to reward rank</param>
+        /// <param name="projId">The project to gain rank in</param>
+        /// <param name="rank">The rank to be given</param>
+        /// <returns></returns>
         public async Task<bool> AssignRankForProject(string username, int projId, RANK rank)
         {
             using (Connection conn = await connector.Create())
@@ -34,7 +40,14 @@ namespace VCAPI.Repository.MySQL
                 return success;
             }
         }
-
+        /// <summary>
+        /// Returns the rank of the user for project.
+        /// If the user is a superadmin, then projectId is irrelevant 
+        /// and he will always have access
+        /// </summary>
+        /// <param name="username"></param>
+        /// <param name="projId"></param>
+        /// <returns></returns>
         public async Task<RANK> GetRankForProject(string username, int projId)
         {
             using(Connection conn = await connector.Create()){

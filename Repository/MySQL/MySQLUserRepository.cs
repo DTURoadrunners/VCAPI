@@ -16,11 +16,15 @@ namespace VCAPI.Repository.MySQL
 {
     public class MySQLUserRepository : IUserRepository
     {
+        /// <summary>
+        /// Hard coded settings for the hash
+        /// Should be moved to config file
+        /// </summary>
         private struct HashSettings{
             // Hard-coded hash.. for now.
             public const string salt = "oihergoi23r092ugwe";
             public const int hashSize = 512;
-            public const int iterations = 100000;
+            public const int iterations = 10000;
         }
 
         
@@ -30,8 +34,14 @@ namespace VCAPI.Repository.MySQL
         {
             bsalt = Encoding.UTF32.GetBytes(HashSettings.salt);
             connector = conn;
-        }
+        }  
 
+        /// <summary>
+        /// Checks if a user's password combination is correct
+        /// </summary>
+        /// <param name="username">The username to authenticate</param>
+        /// <param name="password">The password to authenticate</param>
+        /// <returns>True if authenticated, false otherwise</returns>
         public async Task<bool> Authenticate(string username, string password)
         {
            UserInfo info = await GetUser(username);
@@ -44,6 +54,11 @@ namespace VCAPI.Repository.MySQL
            }
         }
 
+        /// <summary>
+        /// Gets a user's information
+        /// </summary>
+        /// <param name="username">The user to retrieve information from</param>
+        /// <returns>The user's information</returns>
         public async Task<UserInfo> GetUser(string username)
         {
             using(Connection conn = await connector.Create()){
@@ -68,6 +83,11 @@ namespace VCAPI.Repository.MySQL
             }
         }
 
+        /// <summary>
+        /// Registers a user in the database and hashes the password
+        /// </summary>
+        /// <param name="info">The user to be created</param>
+        /// <returns>True if successfull, false if user already exists</returns>
         public async Task<bool> CreateUser(UserInfo info)
         {
            using(Connection conn = await connector.Create()){
@@ -83,7 +103,6 @@ namespace VCAPI.Repository.MySQL
 
                 string pass = Convert.ToBase64String(hash);
                 command.Parameters.AddWithValue("@passwordparam", pass);
-                command.Parameters.AddWithValue("@superuser", false);
                 try{
                     await command.ExecuteNonQueryAsync();
                     return true;
@@ -95,6 +114,11 @@ namespace VCAPI.Repository.MySQL
            }
         }
 
+        /// <summary>
+        /// Updates the user's information -- Unfinished
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
         public async Task<bool> UpdateUser(UserInfo user)
         {
             using(Connection conn = await connector.Create()){
