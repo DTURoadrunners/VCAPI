@@ -19,7 +19,13 @@ namespace VCAPI.Repository.MySQL
         {
             connection = conn;
         }
-
+        /// <summary>
+        /// Creates a new project
+        /// </summary>
+        /// <param name="name">The name of the project</param>
+        /// <param name="userId">The user who creates the project</param>
+        /// <param name="comment">The reason behind the project's creations</param>
+        /// <returns>The id of the new project</returns>
         public async Task<int> CreateProject(string name, string userId, string comment)
         {
             using(Connection conn = await connection.Create())
@@ -36,6 +42,13 @@ namespace VCAPI.Repository.MySQL
             }
         }
 
+        /// <summary>
+        /// Deletes a project 
+        /// </summary>
+        /// <param name="id">The id of the project to delete</param>
+        /// <param name="userId">The user to be logged as deleting the project</param>
+        /// <param name="comment">The reason behind the deletion</param>
+        /// <returns>Always true</returns>
         public async Task<bool> DeleteProject(int id, string userId, string comment)
         {
              using(Connection conn = await connection.Create()){
@@ -49,7 +62,12 @@ namespace VCAPI.Repository.MySQL
                return true;
             }
         }
-
+        
+        /// <summary>
+        /// Gets a project's information
+        /// </summary>
+        /// <param name="id">The id of the project to retrieve</param>
+        /// <returns>The project info</returns>
         public async Task<ProjectInfo> GetProject(int id)
         {
             using(Connection conn = await connection.Create()){
@@ -68,31 +86,37 @@ namespace VCAPI.Repository.MySQL
             }
         }
 
+        /// <summary>
+        /// Gets a list of all projects
+        /// </summary>
+        /// <returns>A list of projects</returns>
         public async Task<List<ProjectInfo>> GetProjects()
         {
-            try{
                 using(Connection conn = await connection.Create()){
-                                MySqlCommand command = conn.Get().CreateCommand();
-                                command.CommandText = "getActiveProjects";
-                                command.CommandType = CommandType.StoredProcedure;
-                                DbDataReader reader = await command.ExecuteReaderAsync();
-                                if(!await reader.NextResultAsync()){
-                                    return null;
-                                }
-                                List <ProjectInfo> list = new List<ProjectInfo>();
-                                while (reader.NextResult()){
-                                    list.Add(new ProjectInfo(reader.GetInt32(0), reader.GetString(1)));
-                                }
-                                
-                                return list;
-                            }
-            }catch(MySqlException e)
-            {
-               return new List<ProjectInfo>();
-            }
-           
+                    MySqlCommand command = conn.Get().CreateCommand();
+                    command.CommandText = "getActiveProjects";
+                    command.CommandType = CommandType.StoredProcedure;
+                    DbDataReader reader = await command.ExecuteReaderAsync();
+                    if(!await reader.NextResultAsync()){
+                        return null;
+                    }
+                    List <ProjectInfo> list = new List<ProjectInfo>();
+                    while (reader.NextResult()){
+                        list.Add(new ProjectInfo(reader.GetInt32(0), reader.GetString(1)));
+                    }
+                    
+                    return list;
+                }           
         }
 
+        /// <summary>
+        /// Updates a project's information
+        /// </summary>
+        /// <param name="inf">The information to update with</param>
+        /// <param name="id">The id of the project to update</param>
+        /// <param name="userId">The id of the user performing the update</param>
+        /// <param name="comment">The reason behind the update</param>
+        /// <returns>Always true</returns>
         public async Task<bool> UpdateProject(ProjectInfo inf, int id, string userId, string comment)
         {
              using(Connection conn = await connection.Create()){
@@ -109,7 +133,16 @@ namespace VCAPI.Repository.MySQL
             }
         }
 
-         public async Task<bool> RollbackProject(int id, int revisionId, string userId, string comment)
+
+        /// <summary>
+        /// Rolls back a project description to an earlier reviison
+        /// </summary>
+        /// <param name="id">The id of the project to rollback</param>
+        /// <param name="revisionId">The revision to rollback to</param>
+        /// <param name="userId">The id of the user performing the rollback</param>
+        /// <param name="comment">The reason behind the rollback</param>
+        /// <returns></returns>
+        public async Task<bool> RollbackProject(int id, int revisionId, string userId, string comment)
         {
             using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
@@ -124,7 +157,13 @@ namespace VCAPI.Repository.MySQL
 
                 return true;
             }
-        }    
+        }
+
+        /// <summary>
+        /// Gets a list of all revisions for a project
+        /// </summary>
+        /// <param name="projectId">The project id to get revisions for</param>
+        /// <returns>A list of revisions</returns>
         public async Task<RevisionInfo[]> GetRevisions(int projectId)
         {
             using(Connection conn = await connection.Create())

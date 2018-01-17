@@ -21,7 +21,16 @@ namespace VCAPI.Repository.MySQL
             connection = conn;
         }
 
-        public async Task<int> CreateDocument(DocumentInfo info, string userId, string comment, int id)
+        /// <summary>
+        /// Creates a new document metadata entry.
+        /// The actual file data is not stored in the database
+        /// </summary>
+        /// <param name="info">The information about the document to be registered in the database</param>
+        /// <param name="userId">The id of the user who creates the document</param>
+        /// <param name="comment">The reason behind its creation</param>
+        /// <param name="activeComponentTypeId">The component type which the document belongs to</param>
+        /// <returns>The Id of the newly created document</returns>
+        public async Task<int> CreateDocument(DocumentInfo info, string userId, string comment, int activeComponentTypeId)
         {
             using(Connection conn = await connection.Create())
             {
@@ -29,7 +38,7 @@ namespace VCAPI.Repository.MySQL
                 command.CommandText = "createDocument";
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@_filename", info.filename);
-                command.Parameters.AddWithValue("@_activeComponentTypeID", id);
+                command.Parameters.AddWithValue("@_activeComponentTypeID", activeComponentTypeId);
                 command.Parameters.AddWithValue("@_bucketpath", info.bucketpath);
                 command.Parameters.AddWithValue("@_description", info.description);
                 command.Parameters.AddWithValue("@userID", userId);
@@ -41,6 +50,11 @@ namespace VCAPI.Repository.MySQL
             }
         }
 
+        /// <summary>
+        /// Retrieves the metadata of a document
+        /// </summary>
+        /// <param name="id">The id of the document</param>
+        /// <returns>Metadata of the document</returns>
          public async Task<DocumentInfo> GetDocument(int id)
         {
             using(Connection conn = await connection.Create()){
@@ -58,6 +72,11 @@ namespace VCAPI.Repository.MySQL
             }
         }
 
+        /// <summary>
+        /// Gets all documents for a specific component type id
+        /// </summary>
+        /// <param name="componentTypeId">The component type id</param>
+        /// <returns>A list of documents</returns>
         public async Task<List<DocumentInfo>> getDocuments(int componentTypeId)
         {
             using(Connection conn = await connection.Create()){
@@ -79,6 +98,14 @@ namespace VCAPI.Repository.MySQL
             }
         }
         
+
+        /// <summary>
+        /// Updates the metadata of a document
+        /// </summary>
+        /// <param name="info">The new document info(and the id of the document to be updated)</param>
+        /// <param name="userId">The user performing the update</param>
+        /// <param name="comment">The reason behind the update</param>
+        /// <returns>Always true</returns>
         public async Task<bool> UpdateDocument(DocumentInfo info, string userId, string comment)
         {
             using(Connection conn = await connection.Create()){
@@ -96,6 +123,14 @@ namespace VCAPI.Repository.MySQL
                return true;
             }
         }
+
+        /// <summary>
+        /// Deletes a document
+        /// </summary>
+        /// <param name="id">The document which to delete</param>
+        /// <param name="userId">The user who deletes the document</param>
+        /// <param name="comment">The reason for the deletion</param>
+        /// <returns>Always true</returns>
         public async Task<bool> DeleteDocument(int id, string userId, string comment)
         {
             using(Connection conn = await connection.Create()){
@@ -111,6 +146,13 @@ namespace VCAPI.Repository.MySQL
             }
         }
 
+        /// <summary>
+        /// Rollbacks the document to an earlier revision
+        /// </summary>
+        /// <param name="revisionId">The revision to roll back to - implicitly contains the document id</param>
+        /// <param name="userId">The id of the user performing the rollback</param>
+        /// <param name="comment">The reason behind the rollback</param>
+        /// <returns>Always true</returns>
         public async Task<bool> RollbackDocument(int revisionId, string userId, string comment)
         {
             using(Connection conn = await connection.Create()){
@@ -126,6 +168,12 @@ namespace VCAPI.Repository.MySQL
             }
         }
 
+
+        /// <summary>
+        /// A list of revisions/changesets for a document
+        /// </summary>
+        /// <param name="documentId">The id of the document</param>
+        /// <returns>A list of revisions</returns>
         public async Task<RevisionInfo[]> GetRevisionsAsync(int documentId)
         {
             using(Connection conn = await connection.Create())

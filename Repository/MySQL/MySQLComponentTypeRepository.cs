@@ -21,6 +21,14 @@ namespace VCAPI.Repository.MySQL
             connection = conn;
         }
 
+        /// <summary>
+        /// Creates a new component type
+        /// </summary>
+        /// <param name="info">The type to create</param>
+        /// <param name="projectId">The projectId to associate with the componentype</param>
+        /// <param name="userId">The creator of the componenttype</param>
+        /// <param name="comment">The reason behind the creation</param>
+        /// <returns>The ID of the newly created component type</returns>
         public async Task<int> CreateComponentType(ComponentTypeInfo info, int projectId , string userId, string comment)
         {
             using(Connection conn = await connection.Create())
@@ -41,6 +49,12 @@ namespace VCAPI.Repository.MySQL
             }
         }
 
+        /// <summary>
+        /// Gets a component type
+        /// </summary>
+        /// <param name="componentTypeId">The Id of the component type to get</param>
+        /// <param name="projectId">The project which the component type belongs to</param>
+        /// <returns>The component type</returns>
          public async Task<ComponentTypeInfo> GetComponentType(int componentTypeId, int projectId)
         {
             using(Connection conn = await connection.Create()){
@@ -58,6 +72,11 @@ namespace VCAPI.Repository.MySQL
             }
         }
 
+        /// <summary>
+        /// Gets all component types for a project
+        /// </summary>
+        /// <param name="projectId">The project to get component types from</param>
+        /// <returns>A list of component types</returns>
         public async Task<List<ComponentTypeInfo>> GetComponentTypes(int projectId)
         {
             using(Connection conn = await connection.Create()){
@@ -75,6 +94,13 @@ namespace VCAPI.Repository.MySQL
             }
         }
         
+        /// <summary>
+        /// Updates a component type
+        /// </summary>
+        /// <param name="info">The component type to update(including the id of the component type to update)</param>
+        /// <param name="userId">The id of the user performing the update</param>
+        /// <param name="comment">The reason behind the update</param>
+        /// <returns></returns>
         public async Task<bool> UpdateComponentType(ComponentTypeInfo info, string userId, string comment)
         {
             using(Connection conn = await connection.Create()){
@@ -92,20 +118,33 @@ namespace VCAPI.Repository.MySQL
                 return true;
             }
         }
-        public async Task<bool> DeleteComponentType(int projectId, string userId, string comment)
+
+        /// <summary>
+        /// Deletes a component type
+        /// </summary>
+        /// <param name="componentTypeId">The componentType to delete</param>
+        /// <param name="userId">The user to be logged as the one performing the deletion</param>
+        /// <param name="comment">The reason of the deletion</param>
+        /// <returns></returns>
+        public async Task<bool> DeleteComponentType(int componentTypeId, string userId, string comment)
         {
             using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();
                 command.CommandText = "deleteComponenttype";
                 command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@activeComponentTypeID", projectId);
+                command.Parameters.AddWithValue("@activeComponentTypeID", componentTypeId);
                 command.Parameters.AddWithValue("@userid", userId);
                 command.Parameters.AddWithValue("@commentparam", comment);
                 await command.ExecuteNonQueryAsync();
                 return true;
             }
         }
-
+        
+        /// <summary>
+        /// Gets the change history for a component type
+        /// </summary>
+        /// <param name="componentTypeId">The component type to get the changeset history from</param>
+        /// <returns>A list of changesets</returns>
         public async Task<RevisionInfo[]> GetRevisionAsync(int componentTypeId)
         {
             using(Connection conn = await connection.Create())
@@ -132,7 +171,16 @@ namespace VCAPI.Repository.MySQL
             }
         }
 
-        public async Task<bool> RollbackComponentType(int projectId, int revisionId, string userId, string comment)
+
+        /// <summary>
+        /// Rolls back the component type to an earlier revision.
+        /// The id of the type to update is gained from the revisionId
+        /// </summary>
+        /// <param name="revisionId">The revision to rollback to</param>
+        /// <param name="userId">The id of the user performing the rollback</param>
+        /// <param name="comment">Reason to be logged for the rollback</param>
+        /// <returns>Always true</returns>
+        public async Task<bool> RollbackComponentType(int revisionId, string userId, string comment)
         {
             using(Connection conn = await connection.Create()){
                 MySqlCommand command = conn.Get().CreateCommand();

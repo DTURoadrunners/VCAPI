@@ -28,10 +28,12 @@ namespace VCAPI
         {
             services.AddMvc();
             services.AddOptions();
-            services.AddSingleton<DatabaseConnector>(new DatabaseConnector(Configuration["ConnectionStrings:Connection"]));
+            
+            // Enables the CORS middleware
             services.AddCors();
             
 #region Database injections
+            services.AddSingleton<DatabaseConnector>(new DatabaseConnector(Configuration["ConnectionStrings:Connection"]));
             services.AddTransient<IUserRepository, MySQLUserRepository>();
             services.AddTransient<IProjectRepository, MySQLProjectRepository>();
             services.AddTransient<IResourceAccess, MySQLResourceAccess>();
@@ -44,18 +46,24 @@ namespace VCAPI
 #endregion        
     
 #region JWT
-
+            // Gets the configuration for out JWT tokens.
             JWTOptions jwt = Configuration.GetSection("TokenSettings").Get<JWTOptions>();
 
+            //Enables JWT authentication
             services.AddAuthentication(options =>
             {
+                // Makes the default scheme to be checked JWT
                 options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
             }).AddJwtBearer(options =>
             {
+                // Should be set to true once the server is deployed with SSL certificates
                 options.RequireHttpsMetadata = false;
                 options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters()
                 {
+                    // The key to use for signing tokens
                     IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(jwt.secretKey)),
+
+                    // No need to validate who issued the token when developing
                     ValidateIssuer = false
                 };
                 options.Audience = jwt.audience;
