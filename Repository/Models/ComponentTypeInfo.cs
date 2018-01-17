@@ -12,7 +12,15 @@ namespace VCAPI.Repository.Models
         public int categoryID;
         public int storage;
         public string description;
-
+        
+        /// <summary>
+        /// All the infomation needed to maintain a ComponentType
+        /// </summary>
+        /// <param name="id">The unique id given</param>
+        /// <param name="name">The name of the type</param>
+        /// <param name="categoryID">The id of the type</param>
+        /// <param name="storage">Shows how many is stored</param>
+        /// <param name="description">Description of the part in detail</param>
         public ComponentTypeInfo(int id, string name, int categoryID, int storage, string description)
         {
             this.id = id;

@@ -32,6 +32,7 @@ namespace VCAPI.Controllers
                 return User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value;
             }
         }
+        ///The constructor needs acces to a repo and the ability to work with it through IResource.
         public DocumentController(IDocumentRepository repository, IResourceAccess resourceAccess, IHostingEnvironment env)
         {
             this.repository = repository;
@@ -124,7 +125,7 @@ namespace VCAPI.Controllers
                 description = description.FirstOrDefault()
             };
 
-            //TODO: Make this act as a "transaction"
+            //TODO: Make this act as a "transaction" is probably also shown as an issue on Github
             string bucketName = await StoreToDisc(file);
             StringValues comment;
             Request.Form.TryGetValue("comment", out comment);
@@ -150,9 +151,10 @@ namespace VCAPI.Controllers
             do{
                 filename = Path.GetRandomFileName();
                 path =  dataPath + filename;
-            // There is a 1 of 36^11 chance that this is true
+            // There is a 1 in 36^11 chance* that this is true
             // But if that ever happens we might lose data, 
             // hence we still check to be sure
+            // *The chance is based on info from microsoft
             }while(System.IO.File.Exists(path));
             System.IO.File.Move(tmpPath, path);
             return filename;
@@ -195,7 +197,9 @@ namespace VCAPI.Controllers
 
         [Authorize]
         [HttpGet("{documentId}/revisions")]
-        public async Task<IActionResult> getRevisions([FromRoute]int documentId)
+
+        //Revisions are used in Rollbacks to get the correct Rollback info
+        public async Task<IActionResult> getRevisions([FromRoute]int documentId, [FromRoute]int projectId)
         {
             if (await resourceAccess.GetRankForProject(authorizedUser, projectId) < Repository.RANK.STUDENT)
             {
@@ -208,6 +212,9 @@ namespace VCAPI.Controllers
         
         [Authorize]
         [HttpPut("{documentId}")]
+
+        ///All Rollback functions requires a RollbackProjectMarshallObject,
+        ///this contains the revisied id for which to revert to.
         public async Task<IActionResult> rollbackDocument([FromRoute] int projectId, [FromBody] RollbackProjectMarshallObject marshall)
         {
             if (await resourceAccess.GetRankForProject(authorizedUser, projectId) < Repository.RANK.STUDENT)

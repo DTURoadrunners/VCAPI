@@ -9,6 +9,13 @@ namespace VCAPI.Repository.Interfaces
     
     public interface IProjectRepository
     {
+        /// <summary>
+        /// Creates a project
+        /// </summary>
+        /// <param name="name">Name of the project(they start of empty)</param>
+        /// <param name="userId">Checks if the user is a superadmin(the only rank that can create projects)</param>
+        /// <param name="comment">Used in logs</param>
+        /// <returns></returns>
          Task<int> CreateProject(string name, string userId, string comment);
          Task<bool> DeleteProject(int id, string userId, string comment);
          Task<ProjectInfo> GetProject(int id);

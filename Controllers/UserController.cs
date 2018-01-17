@@ -22,6 +22,7 @@ namespace VCAPI.Controllers
         private readonly IUserRepository repository;
         private readonly IResourceAccess resourceAccess;
 
+        ///The constructor needs acces to a repo and the ability to work with it through IResource.
         public UserController(IUserRepository repo, IResourceAccess access)
         {
             repository = repo;
@@ -58,6 +59,8 @@ namespace VCAPI.Controllers
         [HttpPut("{id}")]
         [VerifyModelState]
         [Authorize]
+
+        //Used to update a user
         public async Task<IActionResult> Put([FromRoute]string id, [FromBody]RANK rank, [FromRoute]int projectID)
         {
             string username = User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value;

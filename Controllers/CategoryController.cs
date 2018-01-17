@@ -17,6 +17,7 @@ namespace VCAPI.Controllers
         private readonly ICategoryRepository repository;
         private readonly IResourceAccess resourceAccess;
 
+        ///The constructor needs acces to a repo and the ability to work with it through IResource.
         public CategoryController(ICategoryRepository repository, IResourceAccess resourceAccess)
         {
             this.repository = repository;

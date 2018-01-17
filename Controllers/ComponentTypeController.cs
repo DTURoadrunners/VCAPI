@@ -19,6 +19,7 @@ namespace VCAPI.Controllers
         private readonly IComponentTypeRepository repository;
         private readonly IResourceAccess resourceAccess;
 
+        ///The constructor needs acces to a repo and the ability to work with it through IResource.
         public ComponentTypeController(IComponentTypeRepository repository, IResourceAccess resourceAccess)
         {
             this.repository = repository;
@@ -54,6 +55,7 @@ namespace VCAPI.Controllers
             }
         }
 
+        //C# wants only one variable FromBody, so we use a marshall
         public class ComponentTypeMarshallObject
         {
             public ComponentTypeInfo model;
@@ -119,6 +121,8 @@ namespace VCAPI.Controllers
         
         [Authorize]
         [HttpGet("{componentTypeid}/revisions")]
+
+        //Revisions are used to get the correct data to Rollback.
         public async Task<IActionResult> getRevisions([FromRoute]int projectId, [FromRoute]int componentTypeId)
         {
             string userId = User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value;
@@ -134,6 +138,9 @@ namespace VCAPI.Controllers
         [Authorize]
         [VerifyModelState]
         [HttpPut("{componentTypeId}/rollback")]
+
+        ///All Rollback functions requires a RollbackProjectMarshallObject,
+        ///this contains the revisied id for which to revert to.
         public async Task<IActionResult> rollbackComponentType([FromRoute] int projectId, [FromRoute] int componentTypeId, [FromBody]RollbackProjectMarshallObject rollback)
         {
             string userId = User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value;

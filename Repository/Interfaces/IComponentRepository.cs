@@ -8,6 +8,14 @@ namespace VCAPI.Repository.Interfaces
 {
     public interface IComponentRepository
     {
+        /// <summary>
+        /// Creates a component
+        /// </summary>
+        /// <param name="activeComponentTypeID">Used to see if its in </param>
+        /// <param name="component">The data for the component</param>
+        /// <param name="userid">Checks to see if the user is eligible</param>
+        /// <param name="comment">Used in logs</param>
+        /// <returns></returns>
         Task<int> CreateComponent(int activeComponentTypeID, ComponentInfo component, string userid, string comment);
         Task<ComponentInfo> GetComponent(int id);
         Task<List<ComponentInfo>> GetComponents(int id);

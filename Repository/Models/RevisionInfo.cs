@@ -1,5 +1,8 @@
 namespace VCAPI.Repository.Models
 {
+    /// <summary>
+    /// Used in all Rollbacks and contains all the infomation needed.
+    /// </summary>
     public class RevisionInfo
     {
         public int revisonId;

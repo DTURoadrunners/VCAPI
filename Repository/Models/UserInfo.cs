@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 
 namespace VCAPI.Repository.Models
 {
+    /// <summary>
+    /// Contains all a users infomation, the password is stored in bytes.
+    /// </summary>
     public class UserInfo
     {
         public string userID;

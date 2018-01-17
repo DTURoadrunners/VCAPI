@@ -25,7 +25,7 @@ namespace VCAPI.Controllers
                 return User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.NameIdentifier).Value;
             }
         }
-
+        ///The constructor needs acces to a repo and the ability to work with it through IResource.
         public ProjectController(IProjectRepository repo, IResourceAccess access){
             repository = repo;
             resourceAccess = access;
@@ -119,6 +119,9 @@ namespace VCAPI.Controllers
         [HttpPut("{projectId}/rollback")]
         [VerifyModelState]
         [Authorize]
+
+        ///All Rollback functions requires a RollbackProjectMarshallObject,
+        ///this contains the revisied id for which to revert to.
         public async Task<IActionResult> rollbackProject([FromRoute] int projectId, [FromBody]RollbackProjectMarshallObject marshall)
         {
             if (!await resourceAccess.IsSuperAdmin(authorizedUser))

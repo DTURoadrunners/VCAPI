@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 
 namespace VCAPI.Options
 {
+    //The class gets filled out by the settings.JSON file. 
     public class JWTOptions
     {
         public string secretKey { get; set; }
